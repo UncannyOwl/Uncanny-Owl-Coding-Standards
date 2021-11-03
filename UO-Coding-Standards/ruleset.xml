@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl Standards"
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl Coding Standards"
 		 namespace="uncanny-owl-standards">
 
 	<description>The Coding standard for the WordPress Coding Standards itself.</description>
@@ -18,7 +18,8 @@
 	<exclude-pattern>*.min.js</exclude-pattern>
 
 	<!-- Include the WordPress-Extra standard. -->
-	<rule ref="./vendor/wp-coding-standards/wpcs/WordPress-Extra/">
+	<rule ref="WordPress-Core"/>
+	<rule ref="WordPress-Extra">
 		<!--
 		We may want a middle ground though. The best way to do this is add the
 		entire ruleset, then rule by rule, remove ones that don't suit a project.
@@ -36,10 +37,10 @@
 		-->
 	</rule>
 
-	<rule ref="./vendor/wp-coding-standards/wpcs/WordPress-Docs"/>
+	<rule ref="WordPress-Docs"/>
 
 	<config name="testVersion" value="7.0-"/>
-	<rule ref="./vendor/phpcompatibility/phpcompatibility-wp/PHPCompatibilityWP"/>
+	<rule ref="PHPCompatibilityWP"/>
 
 	<!-- Add in some extra rules from other standards. -->
 	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
@@ -118,7 +119,7 @@
 	</rule>
 
 	<!-- Check code for cross-version PHP compatibility. -->
-<!--	<rule ref="./vendor/phpcompatibility/php-compatibility/PHPCompatibility">-->
+<!--	<rule ref="../vendor/phpcompatibility/php-compatibility/PHPCompatibility">-->
 <!--		&lt;!&ndash; Exclude PHP constants back-filled by PHPCS. &ndash;&gt;-->
 <!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_finallyFound"/>-->
 <!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_yieldFound"/>-->
