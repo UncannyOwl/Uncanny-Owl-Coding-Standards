@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl Standards"
+		 namespace="uncanny-owl-standards">
+
+	<description>The Coding standard for the WordPress Coding Standards itself.</description>
+
+	<arg value="sp"/>
+	<arg name="extensions" value="php"/>
+	<arg name="basepath" value="."/>
+	<arg name="parallel" value="8"/>
+	<ini name="memory_limit" value="512M"/>
+
+	<exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
+	<!-- Exclude Composer vendor directory. -->
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<!-- Exclude minified Javascript files. -->
+	<exclude-pattern>*.min.js</exclude-pattern>
+
+	<!-- Include the WordPress-Extra standard. -->
+	<rule ref="./vendor/wp-coding-standards/wpcs/WordPress-Extra/">
+		<!--
+		We may want a middle ground though. The best way to do this is add the
+		entire ruleset, then rule by rule, remove ones that don't suit a project.
+		We can do this by running `phpcs` with the '-s' flag, which allows us to
+		see the names of the sniffs reporting errors.
+		Once we know the sniff names, we can opt to exclude sniffs which don't
+		suit our project like so.
+		The below two examples just show how you can exclude rules.
+		They are not intended as advice about which sniffs to exclude.
+		-->
+
+		<!--
+		<exclude name="WordPress.WhiteSpace.ControlStructureSpacing"/>
+		<exclude name="WordPress.Security.EscapeOutput"/>
+		-->
+	</rule>
+
+	<rule ref="./vendor/wp-coding-standards/wpcs/WordPress-Docs"/>
+
+	<config name="testVersion" value="7.0-"/>
+	<rule ref="./vendor/phpcompatibility/phpcompatibility-wp/PHPCompatibilityWP"/>
+
+	<!-- Add in some extra rules from other standards. -->
+	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
+	<rule ref="Generic.Commenting.Todo"/>
+
+	<!-- Enforce PSR1 compatible namespaces. -->
+	<rule ref="PSR1.Classes.ClassDeclaration"/>
+
+	<rule ref="WordPress.Arrays.MultipleStatementAlignment">
+		<properties>
+			<property name="alignMultilineItems" value="!=100"/>
+			<property name="exact" value="false" phpcs-only="true"/>
+		</properties>
+	</rule>
+
+	<rule ref="PSR2.Methods.FunctionClosingBrace"/>
+
+	<!-- Minimum supported WP version -->
+	<config name="minimum_supported_wp_version" value="5.3"/>
+
+	<!-- Check for text-domain -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="uncanny-learndash-groups"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Set posts per page to 9999 instead 100 -->
+	<rule ref="WordPress.WP.PostsPerPage">
+		<properties>
+			<property name="posts_per_page" value="9999"/>
+		</properties>
+	</rule>
+
+	<!-- Validate Sanitized Input -->
+	<rule ref="WordPress.Security.ValidatedSanitizedInput">
+		<properties>
+			<property name="customSanitizingFunctions" type="array">
+				<element value="prefix_sanitize_url"/>
+				<element value="prefix_sanitize_postal_code"/>
+			</property>
+			<property name="customUnslashingSanitizingFunctions" type="array">
+				<element value="prefix_sanitize_unslash_url"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Check for Nonce verification -->
+	<rule ref="WordPress.Security.NonceVerification">
+		<properties>
+			<property name="customSanitizingFunctions" type="array">
+				<element value="prefix_sanitize_url"/>
+				<element value="prefix_sanitize_postal_code"/>
+			</property>
+			<property name="customUnslashingSanitizingFunctions" type="array">
+				<element value="prefix_sanitize_unslash_url"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Check for deprecated functions -->
+	<rule ref="WordPress.WP.DeprecatedFunctions">
+		<properties>
+			<property name="minimum_supported_version" value="5.0"/>
+		</properties>
+	</rule>
+
+	<rule ref="Generic.Formatting.MultipleStatementAlignment">
+		<properties>
+			<property name="alignAtEnd" value="false"/>
+			<property name="maxPadding" value="100"/>
+			<property name="error" value="false"/>
+		</properties>
+	</rule>
+
+	<!-- Check code for cross-version PHP compatibility. -->
+<!--	<rule ref="./vendor/phpcompatibility/php-compatibility/PHPCompatibility">-->
+<!--		&lt;!&ndash; Exclude PHP constants back-filled by PHPCS. &ndash;&gt;-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_finallyFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_yieldFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_ellipsisFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_powFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_pow_equalFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_spaceshipFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_coalesceFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_coalesce_equalFound"/>-->
+<!--		<exclude name="PHPCompatibility.Constants.NewConstants.t_yield_fromFound"/>-->
+<!--	</rule>-->
+
+</ruleset>
