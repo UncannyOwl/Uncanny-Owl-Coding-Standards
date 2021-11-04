@@ -1,13 +1,35 @@
 {
+  "name": "uocs/uncanny-owl-coding-standards",
+  "require": {
+  },
   "require-dev": {
     "squizlabs/php_codesniffer": "*",
     "wp-coding-standards/wpcs": "*",
     "phpcompatibility/php-compatibility": "*",
-    "phpcompatibility/phpcompatibility-wp": "*"
+    "phpcompatibility/phpcompatibility-wp": "*",
+    "wpengine/wpengine-coding-standards": "*",
+    "phpmd/phpmd": "*",
+    "friendsofphp/php-cs-fixer": "*",
+    "vimeo/psalm": "*",
+    "phpstan/phpstan": "*"
   },
   "prefer-stable": true,
   "scripts": {
-    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'",
-    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'"
-  }
+    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'",
+    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'"
+  },
+  "extra": {
+    "installer-paths": {
+    }
+  },
+  "license": "GPL-3.0-or-later",
+  "author": [
+    {
+      "name": "Saad Siddique",
+      "email": "saad@uncannyowl.com"
+    },
+    {
+      "name": "Uncanny Owl"
+    }
+  ]
 }
