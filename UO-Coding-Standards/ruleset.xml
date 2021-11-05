@@ -28,9 +28,9 @@
     <rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
         <severity>0</severity>
     </rule>
-<!--    <rule ref="Squiz.Commenting.VariableComment.EmptyVar">-->
-<!--        <severity>0</severity>-->
-<!--    </rule>-->
+    <!--    <rule ref="Squiz.Commenting.VariableComment.EmptyVar">-->
+    <!--        <severity>0</severity>-->
+    <!--    </rule>-->
 
     <!-- Set posts per page to 9999 instead 100 -->
     <rule ref="WordPress.WP.PostsPerPage">
@@ -92,5 +92,6 @@
     <rule ref="WordPress-Docs"/>
     <!-- Include the WPEngine-Standard standard. -->
     <rule ref="WP-Engine"/>
+
 
 </ruleset>
