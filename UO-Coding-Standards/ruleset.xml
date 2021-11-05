@@ -28,6 +28,9 @@
     <rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
         <severity>0</severity>
     </rule>
+    <rule ref="Squiz.PHP.CommentedOutCode">
+        <severity>0</severity>
+    </rule>
     <!--    <rule ref="Squiz.Commenting.VariableComment.EmptyVar">-->
     <!--        <severity>0</severity>-->
     <!--    </rule>-->
