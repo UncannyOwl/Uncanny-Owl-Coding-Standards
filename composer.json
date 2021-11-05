@@ -1,7 +1,5 @@
 {
   "name": "uocs/uncanny-owl-coding-standards",
-  "require": {
-  },
   "require-dev": {
     "squizlabs/php_codesniffer": "*",
     "wp-coding-standards/wpcs": "*",
@@ -11,7 +9,8 @@
     "phpmd/phpmd": "*",
     "friendsofphp/php-cs-fixer": "*",
     "vimeo/psalm": "*",
-    "phpstan/phpstan": "*"
+    "phpstan/phpstan": "*",
+    "humanmade/psalm-plugin-wordpress": "^2.0"
   },
   "prefer-stable": true,
   "scripts": {

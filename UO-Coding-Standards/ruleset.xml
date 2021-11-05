@@ -6,56 +6,31 @@
     <arg value="sp"/> <!-- Show sniff and progress -->
     <arg name="colors"/> <!-- Show results with colors -->
     <arg name="extensions" value="php"/>
-    <!--	<arg name="basepath" value="."/>-->
     <arg name="parallel" value="8"/>
     <ini name="memory_limit" value="512M"/>
 
     <!-- Check code for cross-version PHP compatibility. -->
-    <config name="minimum_supported_wp_version" value="5.3-"/>
+    <config name="minimum_supported_wp_version" value="5.0-"/>
 
-    <!--	<exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>-->
-    <!--	&lt;!&ndash; Exclude Composer vendor directory. &ndash;&gt;-->
-    <!--	<exclude-pattern>*/node_modules/*</exclude-pattern>-->
+    <exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
+    <!-- Exclude Composer vendor directory. -->
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
-    <!--	&lt;!&ndash; Exclude minified Javascript files. &ndash;&gt;-->
+    <!-- Exclude minified Javascript files. -->
     <exclude-pattern>*.min.js</exclude-pattern>
-
-    <!-- Include the WordPress-Extra standard. -->
-    <rule ref="WordPress-Extra"/>
-    <!-- Include the WordPress-Docs standard. -->
-    <rule ref="WordPress-Docs"/>
-    <!-- Include the WPEngine-Standard standard. -->
-    <rule ref="WP-Engine"/>
 
     <config name="testVersion" value="5.6-"/>
     <rule ref="PHPCompatibilityWP"/>
 
-    <!--&lt;!&ndash;	&lt;!&ndash; Add in some extra rules from other standards. &ndash;&gt;&ndash;&gt;-->
-    <!--&lt;!&ndash;	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>&ndash;&gt;-->
-    <!--&lt;!&ndash;	<rule ref="Generic.Commenting.Todo"/>&ndash;&gt;-->
-
-    <!--&lt;!&ndash;	&lt;!&ndash; Enforce PSR1 compatible namespaces. &ndash;&gt;&ndash;&gt;-->
-    <!--&lt;!&ndash;	<rule ref="PSR1.Classes.ClassDeclaration"/>&ndash;&gt;-->
-
-    <!--	<rule ref="WordPress.Arrays.MultipleStatementAlignment">-->
-    <!--		<properties>-->
-    <!--			<property name="alignMultilineItems" value="!=100"/>-->
-    <!--			<property name="exact" value="false" phpcs-only="true"/>-->
-    <!--		</properties>-->
-    <!--	</rule>-->
-
-    <!--	<rule ref="PSR2.Methods.FunctionClosingBrace"/>-->
-
-    <!-- Minimum supported WP version -->
-
-    <!--	&lt;!&ndash; Check for text-domain &ndash;&gt;-->
-    <!--	<rule ref="WordPress.WP.I18n">-->
-    <!--		<properties>-->
-    <!--			<property name="text_domain" type="array">-->
-    <!--				<element value="uncanny-learndash-groups"/>-->
-    <!--			</property>-->
-    <!--		</properties>-->
-    <!--	</rule>-->
+    <rule ref="Squiz.Commenting">
+        <severity>0</severity>
+    </rule>
+    <rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
+        <severity>0</severity>
+    </rule>
+<!--    <rule ref="Squiz.Commenting.VariableComment.EmptyVar">-->
+<!--        <severity>0</severity>-->
+<!--    </rule>-->
 
     <!-- Set posts per page to 9999 instead 100 -->
     <rule ref="WordPress.WP.PostsPerPage">
@@ -110,4 +85,12 @@
             <property name="strict_class_file_names" value="false"/>
         </properties>
     </rule>
+
+    <!-- Include the WordPress-Extra standard. -->
+    <rule ref="WordPress-Extra"/>
+    <!-- Include the WordPress-Docs standard. -->
+    <rule ref="WordPress-Docs"/>
+    <!-- Include the WPEngine-Standard standard. -->
+    <rule ref="WP-Engine"/>
+
 </ruleset>
