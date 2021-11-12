@@ -1,7 +1,28 @@
 {
   "name": "uocs/uncanny-owl-coding-standards",
+  "type": "phpcodesniffer-standard",
+  "description": "PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions",
+  "keywords": [
+    "wpecs",
+    "phpcs",
+    "standards",
+    "WordPress",
+    "Uncanny Owl",
+    "Automator"
+  ],
+  "license": "MIT",
+  "author": [
+    {
+      "name": "Saad Siddique",
+      "email": "saad@uncannyowl.com"
+    },
+    {
+      "name": "Uncanny Owl"
+    }
+  ],
   "require-dev": {
     "squizlabs/php_codesniffer": "*",
+    "dealerdirect/phpcodesniffer-composer-installer": "*",
     "wp-coding-standards/wpcs": "*",
     "phpcompatibility/php-compatibility": "*",
     "phpcompatibility/phpcompatibility-wp": "*",
@@ -12,23 +33,34 @@
     "phpstan/phpstan": "*",
     "humanmade/psalm-plugin-wordpress": "^2.0"
   },
+  "minimum-stability": "dev",
   "prefer-stable": true,
+  "support": {
+    "issues": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/issues",
+    "wiki": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki",
+    "source": "https://github.com/UncannyOwl/UOCS"
+  },
+  "bin": [
+    "bin/uocs",
+    "bin/uocbf"
+  ],
   "scripts": {
-    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'",
-    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../UO-Coding-Standards'"
-  },
-  "extra": {
-    "installer-paths": {
-    }
-  },
-  "license": "GPL-3.0-or-later",
-  "author": [
-    {
-      "name": "Saad Siddique",
-      "email": "saad@uncannyowl.com"
-    },
-    {
-      "name": "Uncanny Owl"
-    }
-  ]
+    "check-cs": [
+      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs"
+    ],
+    "fix-cs": [
+      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcbf"
+    ],
+    "install-codestandards": [
+      "Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
+    ],
+    "check-complete": [
+      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness -q ./Uncanny-Owl"
+    ],
+    "check-complete-strict": [
+      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness ./Uncanny-Owl"
+    ],
+    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../Uncanny-Owl'",
+    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../Uncanny-Owl'"
+  }
 }
