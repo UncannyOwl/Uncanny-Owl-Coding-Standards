@@ -28,4 +28,4 @@ fi
 
 echo -e "Attempting to beautify against Uncanny Owl Coding Standards\n"
 
-${VENDOR_DIR}/vendor/bin/phpcbf --standard="${PHPCS_STANDARD}" --basepath=. --ignore=*build*,*node_modules*,*vendor* ${PHPCS_ARGS}
+phpcbf --standard="${PHPCS_STANDARD}" --basepath=. --ignore=*build*,*node_modules*,*vendor* ${PHPCS_ARGS}

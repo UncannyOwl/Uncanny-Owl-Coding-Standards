@@ -8,12 +8,8 @@
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
-if (is_file(__DIR__.'/../vendor/squizlabs/php_codesniffer/autoload.php') === true) {
-    include_once __DIR__.'/../vendor/squizlabs/php_codesniffer/autoload.php';
-} else {
-    include_once 'PHP/CodeSniffer/autoload.php';
-}
+include_once dirname( __DIR__ ) . '/vendor/squizlabs/php_codesniffer/autoload.php';
 
 $runner   = new PHP_CodeSniffer\Runner();
 $exitCode = $runner->runPHPCBF();
-exit($exitCode);
+exit( $exitCode );
