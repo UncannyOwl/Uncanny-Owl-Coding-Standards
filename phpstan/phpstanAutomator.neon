@@ -1,0 +1,7 @@
+parameters:
+  level: 4
+  paths:
+    - src
+  phpVersion: 70000 # Example for PHP 7.0
+  bootstrapFiles:
+    - ../vendor/php-stubs/wordpress-stubs/wordpress-stubs.php

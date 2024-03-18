@@ -19,8 +19,8 @@
     <!-- Exclude minified Javascript files. -->
     <exclude-pattern>*.min.js</exclude-pattern>
 
-    <config name="testVersion" value="7.0-"/>
-    <rule ref="PHPCompatibilityWP"/>
+	<config name="testVersion" value="7.0-8.2"/>
+	<rule ref="PHPCompatibilityWP"/>
 
     <rule ref="Squiz.Commenting">
         <severity>0</severity>
