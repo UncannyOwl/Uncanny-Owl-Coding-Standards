@@ -1,29 +1,29 @@
 {
-  "name": "uocs/uncanny-owl-coding-standards",
-  "type": "phpcodesniffer-standard",
-  "description": "PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions",
-  "keywords": [
-    "wpecs",
-    "phpcs",
-    "standards",
-    "WordPress",
-    "Uncanny Owl",
-    "Automator"
-  ],
-  "license": "MIT",
-  "author": [
-    {
-      "name": "Saad Siddique",
-      "email": "saad@uncannyowl.com"
-    },
-    {
-      "name": "Uncanny Owl"
-    }
-  ],
+	"name": "uocs/uncanny-owl-coding-standards",
+	"type": "phpcodesniffer-standard",
+	"description": "PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions",
+	"keywords": [
+		"wpecs",
+		"phpcs",
+		"standards",
+		"WordPress",
+		"Uncanny Owl",
+		"Automator"
+	],
+	"license": "MIT",
+	"author": [
+		{
+			"name": "Saad Siddique",
+			"email": "saad@uncannyowl.com"
+		},
+		{
+			"name": "Uncanny Owl"
+		}
+	],
 	"require": {
 		"php": ">=7.0"
 	},
-  "require-dev": {
+	"require-dev": {
 		"squizlabs/php_codesniffer": "^3.6",
 		"dealerdirect/phpcodesniffer-composer-installer": "^0.7",
 		"wp-coding-standards/wpcs": "^2.3",
@@ -35,35 +35,35 @@
 		"vimeo/psalm": "^4.7",
 		"phpstan/phpstan": "^0.12",
 		"humanmade/psalm-plugin-wordpress": "^2.3"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "support": {
-    "issues": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/issues",
-    "wiki": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki",
-    "source": "https://github.com/UncannyOwl/UOCS"
-  },
-  "bin": [
-    "bin/uocs",
-    "bin/uocbf"
-  ],
-  "scripts": {
-    "check-cs": [
-      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs"
-    ],
-    "fix-cs": [
-      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcbf"
-    ],
-    "install-codestandards": [
-      "Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
-    ],
-    "check-complete": [
-      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness -q ./Uncanny-Owl"
-    ],
-    "check-complete-strict": [
-      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness ./Uncanny-Owl"
-    ],
-    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './vendor/wp-coding-standards/wpcs,./vendor/wpengine/wpengine-coding-standards,./vendor/phpcompatibility/php-compatibility,./vendor/phpcompatibility/phpcompatibility-wp,./Uncanny-Owl'",
-    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../Uncanny-Owl'"
-  }
+	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
+	"support": {
+		"issues": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/issues",
+		"wiki": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki",
+		"source": "https://github.com/UncannyOwl/UOCS"
+	},
+	"bin": [
+		"bin/uocs",
+		"bin/uocbf"
+	],
+	"scripts": {
+		"check-cs": [
+			"@php ./vendor/squizlabs/php_codesniffer/bin/phpcs"
+		],
+		"fix-cs": [
+			"@php ./vendor/squizlabs/php_codesniffer/bin/phpcbf"
+		],
+		"install-codestandards": [
+			"Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
+		],
+		"check-complete": [
+			"@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness -q ./Uncanny-Owl"
+		],
+		"check-complete-strict": [
+			"@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness ./Uncanny-Owl"
+		],
+		"post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './vendor/wp-coding-standards/wpcs,./vendor/wpengine/wpengine-coding-standards,./vendor/phpcompatibility/php-compatibility,./vendor/phpcompatibility/phpcompatibility-wp,./Uncanny-Owl'",
+		"post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/wpengine/wpengine-coding-standards,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../Uncanny-Owl'"
+	}
 }
