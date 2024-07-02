@@ -11,14 +11,13 @@ if [[ $# = 0 ]]; then
     NEEDS_HELP="true"
 fi
 
-if [ "${1}" = "-h" ] || [ "${1}" = "--h" ] || [ "${NEEDS_HELP}" = "true" ]
-    then
-        echo -e "Uncanny Owl Coding Standards\n"
-        echo -e "USAGE: uocbf [--strict] [phpcbf-options] <path>\n"
-        echo -e "<wpecs> Run the Uncanny Owl Coding Standards\n"
-        echo -e "<uocbf> Attempt to fix sniffs against the Uncanny Owl Strict Coding Standards\n"
-        echo -e "[phpcs-options] Any argument that can be passed to PHP CodeSniffer\n"
-        exit 0
+if [ "${1}" = "-h" ] || [ "${1}" = "--help" ] || [ "${NEEDS_HELP}" = "true" ]; then
+    echo -e "Uncanny Owl Coding Standards\n"
+    echo -e "USAGE: uocbf [--strict] [phpcbf-options] <path>\n"
+    echo -e "uocs: Run the Uncanny Owl Coding Standards\n"
+    echo -e "uocbf: Attempt to fix sniffs against the Uncanny Owl Strict Coding Standards\n"
+    echo -e "[phpcbf-options]: Any argument that can be passed to PHP CodeSniffer\n"
+    exit 0
 fi
 
 if [ "${1}" = "--strict" ]; then
