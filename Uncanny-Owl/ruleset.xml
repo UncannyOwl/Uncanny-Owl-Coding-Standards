@@ -1,66 +1,89 @@
+<?xml version="1.0"?>
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl" namespace="UO\CS"
-		 xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
 
-	<description>The Coding standard for Uncanny Owl projects.</description>
+    <description>Coding standards used for the Uncanny Automator.</description>
 
-	<arg value="sp"/> <!-- Show sniff and progress -->
-	<arg name="colors"/> <!-- Show results with colors -->
-	<arg name="extensions" value="php"/>
-	<arg name="parallel" value="8"/>
-	<ini name="memory_limit" value="512M"/>
+    <arg value="sp"/> <!-- Show sniff and progress -->
+    <arg name="colors"/> <!-- Show results with colors -->
+    <arg name="extensions" value="php"/>
+    <arg name="parallel" value="8"/>
+    <ini name="memory_limit" value="512M"/>
 
-	<!-- Check code for cross-version PHP compatibility. -->
-	<config name="minimum_supported_wp_version" value="5.4-"/>
-	<config name="testVersion" value="7.0-8.3"/>
+    <!-- Check code for cross-version PHP compatibility. -->
+    <config name="minimum_supported_wp_version" value="5.6-"/>
+    <config name="testVersion" value="7.3"/>
 
-	<!-- Exclude unnecessary directories -->
-	<exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
-	<exclude-pattern>*/node_modules/*</exclude-pattern>
-	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
 
-	<!-- PHP Compatibility Rules -->
-	<rule ref="PHPCompatibilityWP"/>
+    <!-- Include the WordPress-Extra standard. -->
+    <rule ref="WordPress-Extra">
+        <!-- Exclude rules that conflict with our standards -->
+        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+        <exclude name="WordPress.PHP.YodaConditions"/>
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="Squiz.Commenting"/>
+        <exclude name="Generic.Commenting"/>
+    </rule>
 
-	<!-- Commenting Rules -->
-	<rule ref="Squiz.Commenting">
-		<severity>0</severity>
-	</rule>
-	<rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
-		<severity>0</severity>
-	</rule>
-	<rule ref="Squiz.PHP.CommentedOutCode">
-		<severity>0</severity>
-	</rule>
+    <!-- Security related rules - keep these strict -->
+    <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
 
-	<!-- WordPress Specific Rules -->
-	<rule ref="WordPress.WP.PostsPerPage">
-		<properties>
-			<property name="posts_per_page" value="99999"/>
-			<property name="posts_per_page" value="-1"/>
-		</properties>
-	</rule>
+    <!-- Include PHP Compatibility checking -->
+    <rule ref="PHPCompatibility"/>
+    <rule ref="PHPCompatibilityWP"/>
 
-	<!-- Security Rules -->
-	<rule ref="WordPress.Security.ValidatedSanitizedInput">
-		<properties>
-			<property name="customSanitizingFunctions" type="array" value=""/>
-			<property name="customUnslashingSanitizingFunctions" type="array" value=""/>
-			<property name="customAutoEscapedFunctions" type="array" value=""/>
-			<property name="customPrintingFunctions" type="array" value=""/>
-		</properties>
-	</rule>
+    <!-- Customize specific rules -->
+    <rule ref="WordPress.WP.PostsPerPage">
+        <properties>
+            <property name="posts_per_page" value="9999"/>
+            <property name="posts_per_page" value="-1"/>
+        </properties>
+    </rule>
 
-	<!-- Check for Nonce verification -->
-	<rule ref="WordPress.Security.NonceVerification">
-		<property name="customSanitizingFunctions" type="array" value=""/>
-		<property name="customUnslashingSanitizingFunctions" type="array" value=""/>
-		<property name="customAutoEscapedFunctions" type="array" value=""/>
-		<property name="customPrintingFunctions" type="array" value=""/>
-	</rule>
+    <!-- Validate Sanitized Input -->
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <properties>
+            <property name="customSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_url"/>
+                <element value="prefix_sanitize_postal_code"/>
+            </property>
+            <property name="customUnslashingSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_unslash_url"/>
+            </property>
+        </properties>
+    </rule>
 
-	<!-- Include the WordPress-Extra standard. -->
-	<rule ref="WordPress-Extra"/>
-	<!-- Include the WordPress-Docs standard. -->
-	<rule ref="WordPress-Docs"/>
+    <!-- Formatting rules that align with WordPress but are more lenient -->
+    <rule ref="Generic.Formatting.MultipleStatementAlignment">
+        <properties>
+            <property name="alignAtEnd" value="false"/>
+            <property name="maxPadding" value="100"/>
+            <property name="error" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- Allow more flexible file naming -->
+    <rule ref="WordPress.Files.FileName">
+        <properties>
+            <property name="strict_class_file_names" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- Exclude some overly strict rules -->
+    <rule ref="Squiz.PHP.CommentedOutCode">
+        <severity>0</severity>
+    </rule>
+    <!-- <rule ref="Universal.CodeAnalysis.UnusedFunctionParameter">
+        <severity>0</severity>
+    </rule> -->
+    <rule ref="WordPress.WP.AlternativeFunctions">
+        <severity>0</severity>
+    </rule>
 </ruleset>
