@@ -4,10 +4,25 @@
 
     <description>Coding standards used for the Uncanny Automator.</description>
 
-    <arg value="sp"/> <!-- Show sniff and progress -->
-    <arg name="colors"/> <!-- Show results with colors -->
+    <!-- Show sniff codes in all reports -->
+    <arg value="sp"/>
+    <!-- Show progress of the run -->
+    <arg value="p"/>
+    <!-- Show sniff names and line numbers in report -->
+    <arg value="s"/>
+    <!-- Show colors in output -->
+    <arg name="colors"/>
+    <!-- Only check PHP files -->
     <arg name="extensions" value="php"/>
+    <!-- Use parallel processing -->
     <arg name="parallel" value="8"/>
+    <!-- Add source codes to show where violations occur -->
+    <arg value="ns"/>
+    <!-- Show the full report -->
+    <arg name="report" value="full"/>
+    <!-- Group violations by category -->
+    <arg name="report-width" value="120"/>
+
     <ini name="memory_limit" value="512M"/>
 
     <!-- Check code for cross-version PHP compatibility. -->
@@ -28,6 +43,11 @@
         <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
         <exclude name="Squiz.Commenting"/>
         <exclude name="Generic.Commenting"/>
+    </rule>
+
+    <!-- Include Uncanny Automator specific rules if available -->
+    <rule ref="Uncanny_Automator">
+        <exclude name="Squiz.Commenting"/>
     </rule>
 
     <!-- Security related rules - keep these strict -->
@@ -76,13 +96,93 @@
         </properties>
     </rule>
 
+    <!-- 1. Syntax and Basic Formatting -->
+    <rule ref="Generic.PHP.Syntax"/>
+    <rule ref="PSR2.Files.EndFileNewline"/>
+
+    <!-- 2. String and Quote Usage -->
+    <rule ref="Squiz.Strings.DoubleQuoteUsage">
+        <type>warning</type>
+        <message>Use single quotes unless interpolating variables</message>
+    </rule>
+
+    <!-- 3. Array Formatting -->
+    <rule ref="WordPress.Arrays.ArrayKeySpacingRestrictions">
+        <type>warning</type>
+        <message>Array key should not have surrounding spaces</message>
+    </rule>
+
+    <!-- 4. Function Formatting -->
+    <rule ref="Squiz.Functions.FunctionDeclarationArgumentSpacing">
+        <type>warning</type>
+        <message>Arguments should have consistent spacing</message>
+    </rule>
+
+    <rule ref="PEAR.Functions.FunctionCallSignature">
+        <type>warning</type>
+        <message>Function call should have consistent spacing</message>
+    </rule>
+
+    <!-- 5. Class Structure -->
+    <rule ref="Generic.Classes.OpeningBraceSameLine">
+        <type>warning</type>
+        <message>Opening brace should be on the same line</message>
+    </rule>
+
+    <rule ref="PEAR.NamingConventions.ValidClassName">
+        <type>warning</type>
+        <message>Class names must start with a capital letter</message>
+    </rule>
+
+    <!-- 6. File Organization -->
+    <rule ref="Generic.Files.OneObjectStructurePerFile">
+        <type>warning</type>
+        <message>Only one class/interface/trait is allowed per file</message>
+    </rule>
+
+    <rule ref="Universal.Files.SeparateFunctionsFromOO">
+        <type>warning</type>
+        <message>Functions should be in separate files from classes</message>
+    </rule>
+
+    <!-- 7. PHP Version Compatibility -->
+    <rule ref="PHPCompatibility.Classes.NewTypedProperties">
+        <type>error</type>
+        <message>Typed properties require PHP 7.4+</message>
+    </rule>
+
+    <rule ref="PHPCompatibility.Operators.NewOperators">
+        <type>error</type>
+        <message>This operator requires a newer PHP version</message>
+    </rule>
+
+    <!-- 8. Uncanny Automator Specific -->
+    <rule ref="Uncanny_Automator.PHP.DisallowUnionTypes">
+        <type>error</type>
+        <message>Union types are not allowed</message>
+    </rule>
+
+    <rule ref="Uncanny_Automator.PHP.ForbiddenPHP8Features">
+        <type>error</type>
+        <message>This PHP 8 feature is not allowed</message>
+    </rule>
+
+    <rule ref="Uncanny_Automator.PHP.PHP74Features">
+        <type>error</type>
+        <message>This PHP 7.4 feature is not allowed</message>
+    </rule>
+
+    <!-- 9. Security -->
+    <rule ref="WordPress.Security.EscapeOutput">
+        <type>error</type>
+        <message>Output must be escaped</message>
+    </rule>
+
     <!-- Exclude some overly strict rules -->
     <rule ref="Squiz.PHP.CommentedOutCode">
         <severity>0</severity>
     </rule>
-    <!-- <rule ref="Universal.CodeAnalysis.UnusedFunctionParameter">
-        <severity>0</severity>
-    </rule> -->
+
     <rule ref="WordPress.WP.AlternativeFunctions">
         <severity>0</severity>
     </rule>

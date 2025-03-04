@@ -10,7 +10,7 @@ PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions. These 
 
 ## Installation
 
-### Local Installation
+### Local Installation (Recommended)
 
 1. Clone the repository:
 ```bash
@@ -18,15 +18,26 @@ git clone https://github.com/UncannyOwl/UOCS.git
 cd UOCS
 ```
 
-2. Install dependencies:
+2. Install using Make:
 ```bash
-composer install
+make install
 ```
 
-3. Make the scripts executable:
+This will:
+- Install all dependencies
+- Set up the coding standards
+- Create necessary symlinks
+- Configure PHPCS
+
+### Manual Installation
+
+If you prefer not to use Make, you can install manually:
+
 ```bash
-chmod +x bin/uocs
-chmod +x bin/uocbf
+composer install
+./vendor/bin/phpcs --config-set installed_paths ./Uncanny-Owl
+chmod +x ./bin/uocs
+chmod +x ./bin/uocbf
 ```
 
 ## Usage
@@ -188,3 +199,121 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For support, please open an issue in the GitHub repository or contact the Uncanny Owl development team.
+
+## Make Commands
+
+The project includes several Make targets for easy management:
+
+### Main Commands
+
+- `make install`: Install coding standards and set up environment
+- `make reinstall`: Clean and reinstall everything
+- `make update`: Update to the latest version
+- `make clean`: Remove installed symlinks and configuration
+
+### Additional Commands
+
+- `make check-standards`: Display installed coding standards and configuration
+- `make add-sniffs`: Set up directory for additional custom sniffs
+
+### Examples
+
+Install everything fresh:
+```bash
+make reinstall
+```
+
+Add custom sniffs:
+```bash
+make add-sniffs
+# Add your sniffs to the created directory
+make reinstall
+```
+
+Check installation:
+```bash
+make check-standards
+```
+
+## Adding Custom Sniffs
+
+1. Create the additional sniffs directory:
+```bash
+make add-sniffs
+```
+
+2. Add your custom sniffs to:
+```
+./Uncanny-Owl/additional-sniffs/Uncanny_Automator/
+```
+
+3. Reinstall to apply changes:
+```bash
+make reinstall
+```
+
+## IDE Integration
+
+### Visual Studio Code
+
+1. Install the [PHP Sniffer & Beautifier](https://marketplace.visualstudio.com/items?itemName=ValeryanM.vscode-phpsab) extension
+2. Configure settings.json:
+```json
+{
+    "phpsab.standard": "Uncanny-Owl",
+    "phpsab.executablePathCS": "/usr/local/bin/uocs",
+    "phpsab.executablePathCBF": "/usr/local/bin/uocbf"
+}
+```
+
+### PhpStorm
+
+1. Go to Settings → PHP → Quality Tools → PHP_CodeSniffer
+2. Set PHP_CodeSniffer path to the `uocs` binary
+3. In Editor → Inspections → PHP → Quality Tools
+4. Enable PHP_CodeSniffer and select "Uncanny-Owl" standard
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Standards Not Found**
+```bash
+make reinstall
+```
+
+2. **Permission Issues**
+```bash
+sudo chmod +x ./bin/uocs ./bin/uocbf
+```
+
+3. **Path Issues**
+```bash
+./bin/uocs --debug <path>
+```
+
+### Debug Mode
+
+For detailed output about paths and configuration:
+```bash
+./bin/uocs --debug <path>
+./bin/uocbf --debug <path>
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Make your changes
+4. Run tests and ensure coding standards:
+```bash
+make check-standards
+./bin/uocs .
+```
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
