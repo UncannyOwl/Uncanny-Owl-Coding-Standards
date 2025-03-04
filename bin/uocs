@@ -111,6 +111,9 @@ fi
 VENDOR_DIR=$(dirname $(dirname "${PHPCS_BIN}"))
 debug "Vendor directory: ${VENDOR_DIR}"
 
+# Clear PHPCS cache
+"${PHPCS_BIN}" --config-delete cache > /dev/null 2>&1
+
 # Set installed paths for standards
 INSTALLED_PATHS=(
     "${VENDOR_DIR}/phpcsstandards/phpcsutils"
@@ -194,9 +197,12 @@ if ! "${PHPCS_BIN}" \
     --standard="${RULESET_FILE}" \
     --basepath="${BASEPATH}" \
     --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode \
-    --report-full="${REPORTS_DIR}/report-full.txt" \
-    --report-summary="${REPORTS_DIR}/report-summary.txt" \
-    --report-source \
+    --report=full \
+    --report-width=120 \
+    --colors \
+    --tab-width=4 \
+    --encoding=utf-8 \
+    --runtime-set ignore_warnings_on_exit 1 \
     ${PHPCS_ARGS}; then
     
     echo -e "\n${YELLOW}Found coding standard violations.${NC}"
