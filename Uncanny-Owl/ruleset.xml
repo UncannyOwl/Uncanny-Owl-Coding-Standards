@@ -1,7 +1,8 @@
+<?xml version="1.0"?>
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl" namespace="UO\CS"
          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
 
-    <description>The Coding standard for the WordPress Coding Standards itself.</description>
+    <description>Coding standards used for the Uncanny Automator.</description>
 
     <arg value="sp"/> <!-- Show sniff and progress -->
     <arg name="colors"/> <!-- Show results with colors -->
@@ -10,32 +11,35 @@
     <ini name="memory_limit" value="512M"/>
 
     <!-- Check code for cross-version PHP compatibility. -->
-    <config name="minimum_supported_wp_version" value="5.4-"/>
+    <config name="minimum_supported_wp_version" value="5.6-"/>
+    <config name="testVersion" value="7.3"/>
 
     <exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
-    <!-- Exclude Composer vendor directory. -->
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
-    <!-- Exclude minified Javascript files. -->
     <exclude-pattern>*.min.js</exclude-pattern>
 
-	<config name="testVersion" value="7.0-8.2"/>
-	<rule ref="PHPCompatibilityWP"/>
+    <!-- Include the WordPress-Extra standard. -->
+    <rule ref="WordPress-Extra">
+        <!-- Exclude rules that conflict with our standards -->
+        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
+        <exclude name="WordPress.PHP.YodaConditions"/>
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <exclude name="Squiz.Commenting"/>
+        <exclude name="Generic.Commenting"/>
+    </rule>
 
-    <rule ref="Squiz.Commenting">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.PHP.CommentedOutCode">
-        <severity>0</severity>
-    </rule>
-    <!--    <rule ref="Squiz.Commenting.VariableComment.EmptyVar">-->
-    <!--        <severity>0</severity>-->
-    <!--    </rule>-->
+    <!-- Security related rules - keep these strict -->
+    <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
 
-    <!-- Set posts per page to 9999 instead 100 -->
+    <!-- Include PHP Compatibility checking -->
+    <rule ref="PHPCompatibility"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <!-- Customize specific rules -->
     <rule ref="WordPress.WP.PostsPerPage">
         <properties>
             <property name="posts_per_page" value="9999"/>
@@ -56,26 +60,7 @@
         </properties>
     </rule>
 
-    <!-- Check for Nonce verification -->
-    <rule ref="WordPress.Security.NonceVerification">
-        <properties>
-            <property name="customSanitizingFunctions" type="array">
-                <element value="prefix_sanitize_url"/>
-                <element value="prefix_sanitize_postal_code"/>
-            </property>
-            <property name="customUnslashingSanitizingFunctions" type="array">
-                <element value="prefix_sanitize_unslash_url"/>
-            </property>
-        </properties>
-    </rule>
-
-    <!-- Check for deprecated functions -->
-    <rule ref="WordPress.WP.DeprecatedFunctions">
-        <properties>
-            <property name="minimum_supported_version" value="5.0"/>
-        </properties>
-    </rule>
-
+    <!-- Formatting rules that align with WordPress but are more lenient -->
     <rule ref="Generic.Formatting.MultipleStatementAlignment">
         <properties>
             <property name="alignAtEnd" value="false"/>
@@ -83,18 +68,22 @@
             <property name="error" value="false"/>
         </properties>
     </rule>
+
+    <!-- Allow more flexible file naming -->
     <rule ref="WordPress.Files.FileName">
         <properties>
             <property name="strict_class_file_names" value="false"/>
         </properties>
     </rule>
 
-    <!-- Include the WordPress-Extra standard. -->
-    <rule ref="WordPress-Extra"/>
-    <!-- Include the WordPress-Docs standard. -->
-<!--    <rule ref="WordPress-Docs"/>-->
-    <!-- Include the WPEngine-Standard standard. -->
-    <rule ref="WP-Engine"/>
-
-
+    <!-- Exclude some overly strict rules -->
+    <rule ref="Squiz.PHP.CommentedOutCode">
+        <severity>0</severity>
+    </rule>
+    <!-- <rule ref="Universal.CodeAnalysis.UnusedFunctionParameter">
+        <severity>0</severity>
+    </rule> -->
+    <rule ref="WordPress.WP.AlternativeFunctions">
+        <severity>0</severity>
+    </rule>
 </ruleset>
