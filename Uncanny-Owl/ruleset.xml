@@ -28,6 +28,12 @@
         <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
         <exclude name="Squiz.Commenting"/>
         <exclude name="Generic.Commenting"/>
+        <exclude name="Universal.CodeAnalysis.UnusedFunctionParameter"/>
+    </rule>
+
+    <!-- Include Uncanny Automator specific rules if available -->
+    <rule ref="Uncanny_Automator">
+        <exclude name="Squiz.Commenting"/>
     </rule>
 
     <!-- Security related rules - keep these strict -->
@@ -80,9 +86,7 @@
     <rule ref="Squiz.PHP.CommentedOutCode">
         <severity>0</severity>
     </rule>
-    <!-- <rule ref="Universal.CodeAnalysis.UnusedFunctionParameter">
-        <severity>0</severity>
-    </rule> -->
+
     <rule ref="WordPress.WP.AlternativeFunctions">
         <severity>0</severity>
     </rule>

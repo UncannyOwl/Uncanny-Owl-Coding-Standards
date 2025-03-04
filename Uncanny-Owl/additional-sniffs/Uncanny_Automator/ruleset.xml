@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<ruleset name="Uncanny_Automator">
+    <description>Custom coding standards for Uncanny Automator</description>
+    <rule ref="./Sniffs/PHP/ForbiddenPHP8FeaturesSniff.php"/>
+</ruleset> 

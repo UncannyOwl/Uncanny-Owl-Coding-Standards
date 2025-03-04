@@ -114,6 +114,7 @@ fi
 
 # Find vendor directory based on phpcbf location
 VENDOR_DIR=$(dirname $(dirname "${PHPCBF_BIN}"))
+debug "Vendor directory: ${VENDOR_DIR}"
 
 # Set installed paths for standards
 INSTALLED_PATHS=(
@@ -126,11 +127,19 @@ INSTALLED_PATHS=(
     "${STANDARDS_DIR}"
 )
 
+# Add Uncanny_Automator sniffs if they exist
+AUTOMATOR_SNIFFS_DIR="${SCRIPT_DIR}/../Uncanny-Owl/additional-sniffs/Uncanny_Automator"
+if [[ -d "${AUTOMATOR_SNIFFS_DIR}" ]]; then
+    debug "Found Uncanny_Automator sniffs at: ${AUTOMATOR_SNIFFS_DIR}"
+    INSTALLED_PATHS+=("${AUTOMATOR_SNIFFS_DIR}")
+fi
+
 # Join paths with comma
 INSTALLED_PATHS_STRING=$(IFS=,; echo "${INSTALLED_PATHS[*]}")
+debug "Setting installed_paths to: ${INSTALLED_PATHS_STRING}"
 
-# Configure PHPCS installed paths (phpcbf uses the same config)
-"${PHPCBF_BIN}" --config-set installed_paths "${INSTALLED_PATHS_STRING}" > /dev/null 2>&1
+# Configure PHPCS installed paths
+"${PHPCBF_BIN}" --config-set installed_paths "${INSTALLED_PATHS_STRING}"
 
 RULESET_FILE="${STANDARDS_DIR}/ruleset.xml"
 PHPCS_STANDARD="Uncanny-Owl"

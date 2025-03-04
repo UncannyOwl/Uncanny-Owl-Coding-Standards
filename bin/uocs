@@ -22,6 +22,16 @@ colorize() {
     fi
 }
 
+# Debug mode
+DEBUG=${DEBUG:-0}
+
+# Function to print debug information
+debug() {
+    if [ "$DEBUG" -eq 1 ]; then
+        colorize "$YELLOW" "DEBUG: $1"
+    fi
+}
+
 # Version
 VERSION="1.1"
 
@@ -99,6 +109,7 @@ fi
 
 # Find vendor directory based on phpcs location
 VENDOR_DIR=$(dirname $(dirname "${PHPCS_BIN}"))
+debug "Vendor directory: ${VENDOR_DIR}"
 
 # Set installed paths for standards
 INSTALLED_PATHS=(
@@ -111,11 +122,19 @@ INSTALLED_PATHS=(
     "${STANDARDS_DIR}"
 )
 
+# Add Uncanny_Automator sniffs if they exist
+AUTOMATOR_SNIFFS_DIR="${SCRIPT_DIR}/../Uncanny-Owl/additional-sniffs/Uncanny_Automator"
+if [[ -d "${AUTOMATOR_SNIFFS_DIR}" ]]; then
+    debug "Found Uncanny_Automator sniffs at: ${AUTOMATOR_SNIFFS_DIR}"
+    INSTALLED_PATHS+=("${AUTOMATOR_SNIFFS_DIR}")
+fi
+
 # Join paths with comma
 INSTALLED_PATHS_STRING=$(IFS=,; echo "${INSTALLED_PATHS[*]}")
+debug "Setting installed_paths to: ${INSTALLED_PATHS_STRING}"
 
 # Configure PHPCS installed paths
-"${PHPCS_BIN}" --config-set installed_paths "${INSTALLED_PATHS_STRING}" > /dev/null 2>&1
+"${PHPCS_BIN}" --config-set installed_paths "${INSTALLED_PATHS_STRING}"
 
 RULESET_FILE="${STANDARDS_DIR}/ruleset.xml"
 PHPCS_STANDARD="Uncanny-Owl"
@@ -134,6 +153,7 @@ if [ "${1}" = "-h" ] || [ "${1}" = "--h" ] || [ "${NEEDS_HELP}" = "true" ]
         echo -e "${YELLOW}Options:${NC}"
         echo -e "  --strict    Use strict coding standards"
         echo -e "  --basepath  Set the base path for reporting (default: current directory)"
+        echo -e "  --debug     Enable debug output"
         echo -e "\n${YELLOW}Commands:${NC}"
         echo -e "  <uocs>      Run the Uncanny Owl Coding Standards"
         echo -e "  <uocbf>     Attempt to fix sniffs against the Uncanny Owl Coding Standards"
@@ -152,6 +172,10 @@ while [[ $# -gt 0 ]]; do
         --basepath)
             BASEPATH="$(cd "$2" && pwd)"
             shift 2
+            ;;
+        --debug)
+            DEBUG=1
+            shift
             ;;
         *)
             break
