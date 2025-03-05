@@ -211,58 +211,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support, please open an issue in the GitHub repository or contact the Uncanny Owl development team.
 
-## Make Commands
-
-The project includes several Make targets for easy management:
-
-### Main Commands
-
-- `make install`: Install coding standards and set up environment
-- `make reinstall`: Clean and reinstall everything
-- `make update`: Update to the latest version
-- `make clean`: Remove installed symlinks and configuration
-
-### Additional Commands
-
-- `make check-standards`: Display installed coding standards and configuration
-- `make add-sniffs`: Set up directory for additional custom sniffs
-
-### Examples
-
-Install everything fresh:
-```bash
-make reinstall
-```
-
-Add custom sniffs:
-```bash
-make add-sniffs
-# Add your sniffs to the created directory
-make reinstall
-```
-
-Check installation:
-```bash
-make check-standards
-```
-
-## Adding Custom Sniffs
-
-1. Create the additional sniffs directory:
-```bash
-make add-sniffs
-```
-
-2. Add your custom sniffs to:
-```
-./Uncanny-Owl/additional-sniffs/Uncanny_Automator/
-```
-
-3. Reinstall to apply changes:
-```bash
-make reinstall
-```
-
 ## IDE Integration
 
 ### Visual Studio Code
