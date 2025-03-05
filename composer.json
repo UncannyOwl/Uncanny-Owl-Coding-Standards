@@ -38,13 +38,13 @@
     "phpcompatibility/phpcompatibility-wp": "^2.1",
     "phpcompatibility/phpcompatibility-paragonie": "^1.3",
     "phpcsstandards/phpcsutils": "^1.0",
-    "phpcsstandards/phpcsextra": "^1.1"
-  },
-  "require-dev": {
+    "phpcsstandards/phpcsextra": "^1.1",
     "phpmd/phpmd": "^2.13",
-    "friendsofphp/php-cs-fixer": "^2.19",
+    "friendsofphp/php-cs-fixer": "^3.0",
     "phpstan/phpstan": "^1.10",
-    "humanmade/psalm-plugin-wordpress": "^3.0"
+    "szepeviktor/phpstan-wordpress": "^1.1",
+    "phpstan/extension-installer": "^1.2",
+    "vimeo/psalm": "^4.0"
   },
   "minimum-stability": "stable",
   "prefer-stable": true,
