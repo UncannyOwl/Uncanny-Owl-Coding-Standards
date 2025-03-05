@@ -1,7 +1,6 @@
 {
   "name": "uocs/uncanny-owl-coding-standards",
   "type": "phpcodesniffer-standard",
-  "version": "1.1",
   "description": "PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions",
   "keywords": [
     "phpcs",
@@ -21,7 +20,7 @@
     }
   },
   "license": "MIT",
-  "author": [
+  "authors": [
     {
       "name": "Saad Siddique",
       "email": "saad@uncannyowl.com"
@@ -31,9 +30,10 @@
     }
   ],
   "require": {
-    "squizlabs/php_codesniffer": "3.10.1",
+    "php": ">=7.4",
+    "squizlabs/php_codesniffer": "^3.10.1",
     "dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
-    "wp-coding-standards/wpcs": "3.1.0",
+    "wp-coding-standards/wpcs": "^3.1.0",
     "phpcompatibility/php-compatibility": "^9.3",
     "phpcompatibility/phpcompatibility-wp": "^2.1",
     "phpcompatibility/phpcompatibility-paragonie": "^1.3",
@@ -46,34 +46,24 @@
     "phpstan/phpstan": "^1.10",
     "humanmade/psalm-plugin-wordpress": "^3.0"
   },
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "prefer-stable": true,
   "support": {
-    "issues": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/issues",
-    "wiki": "https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/wiki",
+    "issues": "https://github.com/UncannyOwl/UOCS/issues",
     "source": "https://github.com/UncannyOwl/UOCS"
   },
-  "bin": [
-    "bin/uocs",
-    "bin/uocbf"
-  ],
   "scripts": {
+    "uocs": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
+    "uocbf": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
+    "uocs-strict": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl-Strict --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
+    "uocbf-strict": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl-Strict --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
     "check-cs": [
-      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcs"
+      "@php ./vendor/bin/phpcs"
     ],
     "fix-cs": [
-      "@php ./vendor/squizlabs/php_codesniffer/bin/phpcbf"
+      "@php ./vendor/bin/phpcbf"
     ],
-    "install-codestandards": [
-      "Dealerdirect\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\Plugin::run"
-    ],
-    "check-complete": [
-      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness -q ./Uncanny-Owl"
-    ],
-    "check-complete-strict": [
-      "@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness ./Uncanny-Owl"
-    ],
-    "post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './vendor/wp-coding-standards/wpcs,./vendor/phpcompatibility/php-compatibility,./vendor/phpcompatibility/phpcompatibility-wp,./vendor/phpcompatibility/phpcompatibility-paragonie,./vendor/phpcsstandards/phpcsutils,./vendor/phpcsstandards/phpcsextra,./Uncanny-Owl'",
-    "post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths './../../../vendor/wp-coding-standards/wpcs,./../../../vendor/phpcompatibility/php-compatibility,./../../../vendor/phpcompatibility/phpcompatibility-wp,./../../../vendor/phpcompatibility/phpcompatibility-paragonie,./../../../vendor/phpcsstandards/phpcsutils,./../../../vendor/phpcsstandards/phpcsextra,./../../../Uncanny-Owl'"
+    "post-install-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'",
+    "post-update-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'"
   }
 }

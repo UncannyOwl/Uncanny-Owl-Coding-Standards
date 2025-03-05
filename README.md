@@ -1,194 +1,205 @@
-# Uncanny Owl Coding Standards
+# Uncanny Owl Coding Standards (UOCS)
 
-PHP_CodeSniffer rules (sniffs) to enforce Uncanny Owl coding conventions. These standards are based on WordPress Coding Standards with customizations specific to Uncanny Owl development practices.
+PHP_CodeSniffer rules and sniffs to enforce Uncanny Owl coding conventions.
 
 ## Requirements
 
 - PHP 7.4 or higher
-- [Composer](https://getcomposer.org/)
-- [PHP_CodeSniffer](https://github.com/squizlabs/PHP_CodeSniffer) 3.0.0 or higher
+- Composer
 
 ## Installation
 
-### Local Installation (Recommended)
+### Global Installation (Recommended)
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/UncannyOwl/UOCS.git
-cd UOCS
+composer global require uocs/uncanny-owl-coding-standards
 ```
 
-2. Install using Make:
-```bash
-make install
-```
-
-This will:
-- Install all dependencies
-- Set up the coding standards
-- Create necessary symlinks
-- Configure PHPCS
-
-### Manual Installation
-
-If you prefer not to use Make, you can install manually:
+### Project Installation
 
 ```bash
-composer install
-./vendor/bin/phpcs --config-set installed_paths ./Uncanny-Owl
-chmod +x ./bin/uocs
-chmod +x ./bin/uocbf
+composer require --dev uocs/uncanny-owl-coding-standards
 ```
 
 ## Usage
 
-The package provides two command-line tools:
+After installation, you can use the standards in several ways:
 
-### `uocs` - Check Code Style
-
-Checks your code against the Uncanny Owl Coding Standards and reports violations.
+### Using Composer Scripts (Recommended)
 
 ```bash
-# Basic usage
-./bin/uocs <path>
+# Check coding standards
+composer uocs [path]
 
-# Example: Check a specific plugin directory
-./bin/uocs /path/to/wp-content/plugins/your-plugin/src
-
-# Example: Check a specific file
-./bin/uocs /path/to/wp-content/plugins/your-plugin/src/file.php
+# Fix coding standards
+composer uocbf [path]
 
 # Use strict mode
-./bin/uocs --strict /path/to/wp-content/plugins/your-plugin/src
-
-# Enable debug output
-DEBUG=1 ./bin/uocs /path/to/wp-content/plugins/your-plugin/src
+composer uocs-strict [path]
+composer uocbf-strict [path]
 ```
 
-### `uocbf` - Fix Code Style
-
-Automatically fixes coding standard violations where possible.
+### Using PHPCS Directly
 
 ```bash
-# Basic usage
-./bin/uocbf <path>
+# Check coding standards
+vendor/bin/phpcs --standard=Uncanny-Owl [path]
 
-# Example: Fix a specific plugin directory
-./bin/uocbf /path/to/wp-content/plugins/your-plugin/src
-
-# Example: Fix a specific file
-./bin/uocbf /path/to/wp-content/plugins/your-plugin/src/file.php
-
-# Use strict mode
-./bin/uocbf --strict /path/to/wp-content/plugins/your-plugin/src
-
-# Enable debug output (useful for troubleshooting path issues)
-DEBUG=1 ./bin/uocbf /path/to/wp-content/plugins/your-plugin/src
+# Fix coding standards
+vendor/bin/phpcbf --standard=Uncanny-Owl [path]
 ```
 
-## Configuration
+## Standards
 
-### Ruleset
+The UOCS includes and extends the following standards:
+- WordPress Coding Standards
+- PHP Compatibility
+- PHPCSExtra
+- Custom Uncanny Owl rules
 
-The standards are defined in `Uncanny-Owl/ruleset.xml`. The ruleset extends WordPress-Extra standards with customizations:
+### Available Standards
 
-- Security rules from WordPress-Security
-- Database handling rules from WordPress-DB
-- PHP compatibility checks
-- Custom rules for Uncanny Owl specific conventions
+- `Uncanny-Owl`: Default standard with common rules
+- `Uncanny-Owl-Strict`: Stricter version with additional checks
 
-### Ignored Patterns
+### Custom Ruleset
 
-By default, the following patterns are ignored:
-- `*/build/*`
-- `*/node_modules/*`
-- `*/vendor/*`
-- `.git`
-- `.idea`
-- `.vscode`
-- `*.min.js`
+You can override the default ruleset for your project in two ways:
 
-### Reports
+1. **Project-specific ruleset** (Recommended):
+   Create a `phpcs.xml` or `phpcs.xml.dist` in your project root:
 
-When using `uocs`, reports are generated in the `phpcs-reports` directory:
-- `report-full.txt`: Detailed report of all violations
-- `report-summary.txt`: Summary of violations by type
+```xml
+<?xml version="1.0"?>
+<ruleset name="Custom Project Standard">
+    <!-- Use Uncanny-Owl as base -->
+    <rule ref="Uncanny-Owl">
+        <!-- Exclude rules you don't want -->
+        <exclude name="WordPress.Files.FileName"/>
+    </rule>
 
-## Command Options
+    <!-- Add your own custom rules -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    
+    <!-- Configure specific rules -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+        </properties>
+    </rule>
 
-Both `uocs` and `uocbf` support the following options:
+    <!-- Define your paths -->
+    <file>src/</file>
+    <file>tests/</file>
 
-### Common Options
-- `--strict`: Use stricter coding standards
-- `--debug`: Enable debug output (useful for troubleshooting)
-- `-h` or `--h`: Show help information
+    <!-- Define exclusions -->
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+</ruleset>
+```
 
-### Additional PHPCS/PHPCBF Options
-All standard PHP_CodeSniffer options are supported. Common ones include:
-- `--standard=<standard>`: Specify a different coding standard
-- `--extensions=<extensions>`: Specify which file extensions to check
-- `--ignore=<patterns>`: Specify additional patterns to ignore
-- `--report=<report>`: Specify the report format
-
-## Troubleshooting
-
-### Path Issues
-If you encounter path-related errors:
-1. Use absolute paths to your target directory
-2. Enable debug mode to see what paths are being used:
+2. **Command-line Override**:
 ```bash
-DEBUG=1 ./bin/uocbf /path/to/your/code
+# Using composer script
+composer uocs --standard=/path/to/your/custom-ruleset.xml [path]
+
+# Or directly with PHPCS
+vendor/bin/phpcs --standard=/path/to/your/custom-ruleset.xml [path]
 ```
 
-### Permission Issues
-If you get permission denied errors:
-```bash
-chmod +x bin/uocs
-chmod +x bin/uocbf
-```
+## IDE Integration
 
-### Standards Not Found
-If the standards aren't found:
-1. Make sure you're running the commands from the UOCS directory
-2. Verify that `Uncanny-Owl/ruleset.xml` exists
-3. Run with debug mode to see the paths being checked:
-```bash
-DEBUG=1 ./bin/uocs --version
-```
+### Visual Studio Code
 
-## Integration
-
-### IDE Integration
-
-#### Visual Studio Code
-1. Install the [PHP_CodeSniffer extension](https://marketplace.visualstudio.com/items?itemName=ikappas.phpcs)
+1. Install the [PHP Sniffer & Beautifier](https://marketplace.visualstudio.com/items?itemName=ValeryanM.vscode-phpsab) extension
 2. Configure settings.json:
 ```json
 {
-    "phpcs.standard": "/absolute/path/to/UOCS/Uncanny-Owl/ruleset.xml",
-    "phpcs.executablePath": "/absolute/path/to/UOCS/vendor/bin/phpcs"
+    "phpSniffer.standard": "Uncanny-Owl",
+    "phpSniffer.run": "onType"
 }
 ```
 
-#### PhpStorm
+### PhpStorm
+
 1. Go to Settings → PHP → Quality Tools → PHP_CodeSniffer
-2. Configure the PHP_CodeSniffer path to point to your UOCS installation
-3. Set coding standard to the absolute path of your ruleset.xml
+2. Set PHP_CodeSniffer path to your vendor/bin/phpcs
+3. Go to Settings → Editor → Inspections
+4. Enable PHP → Quality Tools → PHP_CodeSniffer validation
+5. Set 'Coding Standard' to Uncanny-Owl
 
-### Git Pre-commit Hook
+## CI/CD Integration
 
-Add to your `.git/hooks/pre-commit`:
+### Buddy
 
+```yaml
+- pipeline: "Code Standards"
+  trigger_mode: "ON_EVERY_PUSH"
+  ref_name: "refs/heads/*"
+  actions:
+    - action: "Install Dependencies"
+      type: "BUILD"
+      working_directory: "/buddy/app"
+      docker_image_name: "library/php"
+      docker_image_tag: "8.1"
+      execute_commands:
+        - composer install
+    - action: "Check Coding Standards"
+      type: "BUILD"
+      working_directory: "/buddy/app"
+      docker_image_name: "library/php"
+      docker_image_tag: "8.1"
+      execute_commands:
+        - composer uocs
+```
+
+### GitHub Actions
+
+```yaml
+name: PHP_CodeSniffer
+
+on: [push, pull_request]
+
+jobs:
+  phpcs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Install Dependencies
+        run: composer install
+      - name: Run PHPCS
+        run: composer uocs
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Standards Not Found**
+   - Ensure Composer installation was successful
+   - Try running `composer install` again
+   - Check if the standard is listed in `vendor/bin/phpcs -i`
+
+2. **Path Issues**
+   - Use relative paths from your project root
+   - Ensure the path exists and is readable
+
+### Debug Mode
+
+For detailed output, add `-v` to the composer command:
 ```bash
-#!/bin/bash
-/path/to/UOCS/bin/uocs $(git diff --cached --name-only --diff-filter=ACMR | grep .php)
+composer uocs -v [path]
 ```
 
 ## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
