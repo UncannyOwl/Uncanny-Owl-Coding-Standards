@@ -19,7 +19,7 @@
       "phpstan/extension-installer": true
     }
   },
-  "license": "MIT",
+  "license": "proprietary",
   "authors": [
     {
       "name": "Saad Siddique",
@@ -55,7 +55,7 @@
     "squizlabs/php_codesniffer": "^3.10",
     "slevomat/coding-standard": "^8.0"
   },
-  "minimum-stability": "stable",
+  "minimum-stability": "dev",
   "prefer-stable": true,
   "support": {
     "issues": "https://github.com/UncannyOwl/UOCS/issues",
@@ -71,18 +71,22 @@
     "bin/automator-phpcs",
     "bin/automator-phpcbf",
     "bin/api-phpcs",
-    "bin/api-phpcbf"
+    "bin/api-phpcbf",
+    "bin/owl-phpcs",
+    "bin/owl-phpcbf"
   ],
   "scripts": {
     "post-install-cmd": [
       "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
       "chmod +x bin/automator-*",
-      "chmod +x bin/api-*"
+      "chmod +x bin/api-*",
+      "chmod +x bin/owl-*"
     ],
     "post-update-cmd": [
       "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
       "chmod +x bin/automator-*",
-      "chmod +x bin/api-*"
+      "chmod +x bin/api-*",
+      "chmod +x bin/owl-*"
     ],
     "analyse": "phpstan analyse",
     "phpcs": "phpcs",
