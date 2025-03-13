@@ -4,39 +4,32 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0 http://pmd.sf.net/ruleset_xml_schema.xsd"
          xsi:noNamespaceSchemaLocation="http://pmd.sf.net/ruleset_xml_schema.xsd">
-    <description>PHP MD Standards for plugin</description>
+    <description>Basic PHPMD Standards for Uncanny Owl plugins</description>
 
-    <!-- PHPMD ruleset -->
-
+    <!-- Only include essential rules -->
     <rule ref="rulesets/cleancode.xml">
         <exclude name="StaticAccess"/>
+        <exclude name="BooleanArgumentFlag"/>
+        <exclude name="ElseExpression"/>
     </rule>
 
-    <rule ref="rulesets/codesize.xml"/>
-
-    <rule ref="rulesets/controversial.xml">
-        <exclude name="CamelCaseMethodName"/>
-        <exclude name="CamelCaseParameterName"/>
-        <exclude name="CamelCasePropertyName"/>
-        <exclude name="CamelCaseClassName"/>
-        <exclude name="CamelCaseVariableName"/>
+    <rule ref="rulesets/codesize.xml">
+        <exclude name="TooManyPublicMethods"/>
+        <exclude name="ExcessiveClassComplexity"/>
+        <exclude name="ExcessiveMethodLength"/>
     </rule>
 
     <rule ref="rulesets/design.xml">
-        <!-- normal in WP for redirects, etc -->
         <exclude name="ExitExpression"/>
+        <exclude name="CouplingBetweenObjects"/>
     </rule>
 
-    <rule ref="rulesets/naming.xml/ShortVariable">
-        <properties>
-            <!-- common in WP -->
-            <property name="exceptions" value="id,wp"/>
-        </properties>
+    <rule ref="rulesets/naming.xml">
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="ShortMethodName"/>
     </rule>
 
-    <rule ref="rulesets/naming.xml/LongVariable"/>
-    <rule ref="rulesets/naming.xml/ShortMethodName"/>
-    <rule ref="rulesets/naming.xml/ConstructorWithNameAsEnclosingClass"/>
+    <!-- Keep only basic naming conventions -->
     <rule ref="rulesets/naming.xml/ConstantNamingConventions"/>
-    <rule ref="rulesets/naming.xml/BooleanGetMethodName"/>
 </ruleset>

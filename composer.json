@@ -15,11 +15,10 @@
       "php": "7.4"
     },
     "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true,
-      "phpstan/extension-installer": true
+      "dealerdirect/phpcodesniffer-composer-installer": true
     }
   },
-  "license": "MIT",
+  "license": "proprietary",
   "authors": [
     {
       "name": "Saad Siddique",
@@ -38,32 +37,57 @@
     "phpcompatibility/phpcompatibility-wp": "^2.1",
     "phpcompatibility/phpcompatibility-paragonie": "^1.3",
     "phpcsstandards/phpcsutils": "^1.0",
-    "phpcsstandards/phpcsextra": "^1.1",
-    "phpmd/phpmd": "^2.13",
-    "friendsofphp/php-cs-fixer": "^3.0",
-    "phpstan/phpstan": "^1.10",
-    "szepeviktor/phpstan-wordpress": "^1.1",
-    "phpstan/extension-installer": "^1.2",
-    "vimeo/psalm": "^4.0"
+    "phpcsstandards/phpcsextra": "^1.1"
   },
-  "minimum-stability": "stable",
+  "require-dev": {
+    "phpstan/phpstan": "^1.10",
+    "szepeviktor/phpstan-wordpress": "^1.3",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "vimeo/psalm": "^5.0",
+    "phpmd/phpmd": "^2.13",
+    "squizlabs/php_codesniffer": "^3.10",
+    "slevomat/coding-standard": "^8.0"
+  },
+  "minimum-stability": "dev",
   "prefer-stable": true,
   "support": {
     "issues": "https://github.com/UncannyOwl/UOCS/issues",
     "source": "https://github.com/UncannyOwl/UOCS"
   },
+  "autoload": {
+    "psr-4": {
+      "Uncanny_Automator\\": "Uncanny-Automator/",
+      "UO\\API\\": "Automator-API/"
+    }
+  },
+  "bin": [
+    "bin/automator-phpcs",
+    "bin/automator-phpcbf",
+    "bin/api-phpcs",
+    "bin/api-phpcbf",
+    "bin/owl-phpcs",
+    "bin/owl-phpcbf"
+  ],
   "scripts": {
-    "uocs": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocbf": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocs-strict": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl-Strict --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocbf-strict": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl-Strict --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "check-cs": [
-      "@php ./vendor/bin/phpcs"
+    "post-install-cmd": [
+      "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
+      "chmod +x bin/automator-*",
+      "chmod +x bin/api-*",
+      "chmod +x bin/owl-*"
     ],
-    "fix-cs": [
-      "@php ./vendor/bin/phpcbf"
+    "post-update-cmd": [
+      "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
+      "chmod +x bin/automator-*",
+      "chmod +x bin/api-*",
+      "chmod +x bin/owl-*"
     ],
-    "post-install-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'",
-    "post-update-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'"
+    "analyse": "phpstan analyse",
+    "phpcs": "phpcs",
+    "phpcbf": "phpcbf",
+    "psalm": "psalm",
+    "phpmd": "phpmd src text phpmd.xml"
+  },
+  "extra": {
+    "phpcodesniffer-search-depth": 5
   }
 }

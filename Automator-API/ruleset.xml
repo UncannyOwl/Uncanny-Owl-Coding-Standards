@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Automator API" namespace="UO\API"
+         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+
+    <description>Coding standards for Automator API (Slim Framework)</description>
+
+    <!-- Show sniff codes in all reports -->
+    <arg value="sp"/>
+    <!-- Show progress of the run -->
+    <arg value="p"/>
+    <!-- Show sniff names and line numbers in report -->
+    <arg value="s"/>
+    <!-- Show colors in output -->
+    <arg name="colors"/>
+    <!-- Only check PHP files -->
+    <arg name="extensions" value="php"/>
+    <!-- Use parallel processing -->
+    <arg name="parallel" value="8"/>
+    <!-- Add source codes to show where violations occur -->
+    <arg value="ns"/>
+    <!-- Show the full report -->
+    <arg name="report" value="full"/>
+    <!-- Group violations by category -->
+    <arg name="report-width" value="120"/>
+
+    <ini name="memory_limit" value="512M"/>
+
+    <!-- PHP Version Configuration -->
+    <config name="testVersion" value="8.2-"/>
+
+    <!-- Exclude patterns -->
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/build/*</exclude-pattern>
+    <exclude-pattern>/dist/*</exclude-pattern>
+    <exclude-pattern>*.js</exclude-pattern>
+    <exclude-pattern>*.css</exclude-pattern>
+
+    <!-- PSR-12 Standard (includes PSR-1 and PSR-2) -->
+    <rule ref="PSR12"/>
+
+    <!-- PHP Compatibility -->
+    <rule ref="PHPCompatibility"/>
+
+    <!-- Additional Rules -->
+    <rule ref="Generic.PHP.Syntax"/>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="120"/>
+        </properties>
+    </rule>
+
+    <!-- Strict Types Declaration -->
+    <rule ref="Generic.PHP.RequireStrictTypes"/>
+
+    <!-- Type Hints -->
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint">
+        <properties>
+            <property name="enableObjectTypeHint" value="true"/>
+        </properties>
+    </rule>
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
+
+    <!-- Clean Code Rules -->
+    <rule ref="SlevomatCodingStandard.Classes.UnusedPrivateElements"/>
+    <rule ref="SlevomatCodingStandard.Functions.UnusedParameter"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UseSpacing"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes"/>
+
+    <!-- Array Formatting -->
+    <rule ref="Generic.Arrays.ArrayIndent"/>
+    <rule ref="Squiz.Arrays.ArrayDeclaration">
+        <exclude name="Squiz.Arrays.ArrayDeclaration.SingleLineNotAllowed"/>
+    </rule>
+
+    <!-- Function Rules -->
+    <rule ref="Generic.Functions.OpeningFunctionBraceBsdAllman">
+        <exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman.BraceOnSameLine"/>
+    </rule>
+
+    <!-- Security -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="eval" value="null"/>
+                <element key="dd" value="null"/>
+                <element key="die" value="null"/>
+                <element key="var_dump" value="null"/>
+                <element key="print_r" value="null"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Naming Conventions -->
+    <rule ref="Generic.NamingConventions.UpperCaseConstantName"/>
+    <rule ref="Generic.NamingConventions.CamelCapsFunctionName"/>
+
+    <!-- Class Structure -->
+    <rule ref="PSR1.Classes.ClassDeclaration"/>
+    <rule ref="Squiz.Classes.ValidClassName"/>
+
+    <!-- Modern PHP Features -->
+    <rule ref="SlevomatCodingStandard.Classes.ModernClassNameReference"/>
+    <rule ref="SlevomatCodingStandard.Functions.ArrowFunctionDeclaration"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.UnionTypeHintFormat"/>
+    <rule ref="SlevomatCodingStandard.Classes.ClassStructure"/>
+
+    <!-- Docblock Rules -->
+    <rule ref="Generic.Commenting.DocComment"/>
+    <rule ref="Squiz.Commenting.FunctionComment"/>
+    <rule ref="Squiz.Commenting.VariableComment"/>
+</ruleset>

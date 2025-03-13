@@ -1,0 +1,76 @@
+name: Reusable Lint Workflow
+
+on:
+  workflow_call:
+    inputs:
+      paths:
+        description: 'Paths to check'
+        required: false
+        default: |
+          **/*.php
+          !vendor/**
+          !tests/**
+          !**/tests/**
+          !node_modules/**
+          !build/**
+          !dist/**
+        type: string
+      standard:
+        description: 'Which standard to use (Uncanny-Automator, Automator-API, or Uncanny-Owl)'
+        required: false
+        default: 'Uncanny-Automator'
+        type: string
+    outputs:
+      lint_completed:
+        description: "Indicates if linting was completed"
+        value: ${{ jobs.lint.outputs.completed }}
+
+jobs:
+  lint:
+    name: Lint PHP Files
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    outputs:
+      completed: ${{ steps.set-result.outputs.completed }}
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: ${{ inputs.paths }}
+
+      - name: Install Uncanny Coding Standards
+        if: steps.changed-files.outputs.all_changed_files != ''
+        run: |
+          composer require --dev uocs/uncanny-owl-coding-standards:dev-main
+
+      - name: Run PHPCBF
+        if: steps.changed-files.outputs.all_changed_files != ''
+        run: |
+          case "${{ inputs.standard }}" in
+            "Automator-API")
+              ./vendor/bin/api-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+            "Uncanny-Owl")
+              ./vendor/bin/owl-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+            *)
+              ./vendor/bin/automator-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+          esac
+
+      - name: Add & Commit
+        if: steps.changed-files.outputs.all_changed_files != ''
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Auto lint [skip actions]'
+
+      - name: Set result
+        id: set-result
+        run: echo "completed=true" >> $GITHUB_OUTPUT 

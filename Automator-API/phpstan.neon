@@ -1,0 +1,65 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - app
+    excludePaths:
+        - vendor/*
+        - tests/*
+        - cache/*
+        - logs/*
+    tmpDir: cache/phpstan
+    checkMissingIterableValueType: true
+    checkGenericClassInNonGenericObjectType: true
+    checkMissingCallableSignature: true
+    treatPhpDocTypesAsCertain: true
+
+    # Slim Framework specific settings
+    bootstrapFiles:
+        - vendor/autoload.php
+
+    scanDirectories:
+        - vendor/slim
+
+    ignoreErrors:
+        # PSR Container interface method calls
+        - '#Call to an undefined method Psr\\Container\\ContainerInterface::#'
+        # PSR-7 Response interface method calls
+        - '#Call to an undefined method Psr\\Http\\Message\\ResponseInterface::#'
+        # Slim specific patterns
+        - '#Access to an undefined property Slim\\Http\\Response::#'
+        - '#Cannot call method [a-zA-Z0-9\\_]+\(\) on Psr\\Http\\Message\\ResponseInterface|null#'
+        # DI Container method calls
+        - '#Call to an undefined method DI\\Container::#'
+
+    # Modern PHP Features
+    featureToggles:
+        disableRuntimeReflectionProvider: true
+        strictRules: true
+        checkUnresolvableParameterTypes: true
+        reportUnmatchedIgnoredErrors: true
+        checkMissingClosureSignature: true
+        checkDynamicProperties: true
+
+    # Type checking
+    checkPhpDocMissingReturn: true
+    checkUnionTypes: true
+    checkExplicitMixed: true
+    checkImplicitMixed: true
+
+services:
+    -
+        class: PHPStan\Rules\Cast\UselessCastRule
+        tags: [phpstan.rules.rule]
+    -
+        class: PHPStan\Rules\Functions\UnusedClosureUsesRule
+        tags: [phpstan.rules.rule]
+    -
+        class: PHPStan\Rules\Variables\UnusedVariableRule
+        tags: [phpstan.rules.rule]
+    -
+        class: PHPStan\Rules\DeadCode\UnusedPrivatePropertyRule
+        tags: [phpstan.rules.rule]
+    -
+        class: PHPStan\Rules\DeadCode\UnusedPrivateMethodRule
+        tags: [phpstan.rules.rule] 

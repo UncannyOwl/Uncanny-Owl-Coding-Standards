@@ -1,6 +1,6 @@
 <?php
 
-namespace PHP_CodeSniffer\Standards\Uncanny_Automator\Sniffs\PHP;
+namespace Uncanny_Automator\Sniffs\PHP;
 
 if ( class_exists( '\PHP_CodeSniffer\Standards\Uncanny_Automator\Sniffs\PHP\ForbiddenFunctionsSniff', false ) ) {
 	return;

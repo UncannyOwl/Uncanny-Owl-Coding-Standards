@@ -1,6 +1,6 @@
 <?php
 
-namespace PHP_CodeSniffer\Standards\Uncanny_Automator\Sniffs\PHP;
+namespace Uncanny_Automator\Sniffs\PHP;
 
 use PHP_CodeSniffer\Sniffs\Sniff;
 use PHP_CodeSniffer\Files\File;

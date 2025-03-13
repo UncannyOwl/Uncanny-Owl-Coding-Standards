@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+
+$vendorDir = __DIR__ . '/../vendor';
+
+if (!file_exists($vendorDir)) {
+    // Try to find vendor directory in parent directories (for global installation)
+    $parentDir = dirname(__DIR__);
+    while ($parentDir !== '/' && !file_exists($parentDir . '/vendor')) {
+        $parentDir = dirname($parentDir);
+    }
+    if (file_exists($parentDir . '/vendor')) {
+        $vendorDir = $parentDir . '/vendor';
+    }
+}
+
+$standard = __DIR__ . '/../Automator-API/ruleset.xml';
+if (!file_exists($standard)) {
+    // Try to find the standard in vendor directory
+    $standard = $vendorDir . '/uocs/uncanny-owl-coding-standards/Automator-API/ruleset.xml';
+}
+
+$phpcs = $vendorDir . '/bin/phpcs';
+if (!file_exists($phpcs)) {
+    $phpcs = $vendorDir . '/squizlabs/php_codesniffer/bin/phpcs';
+}
+
+if (!file_exists($phpcs)) {
+    die("Could not find PHPCS executable\n");
+}
+
+$cmd = sprintf(
+    '%s --standard=%s -v %s',
+    escapeshellarg($phpcs),
+    escapeshellarg($standard),
+    implode(' ', array_map('escapeshellarg', array_slice($argv, 1)))
+);
+
+passthru($cmd, $return);
+exit($return);

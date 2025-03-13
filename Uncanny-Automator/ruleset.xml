@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Automator" namespace="Uncanny_Automator"
+         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+
+    <description>Coding standards used for the Uncanny Automator.</description>
+
+    <!-- Show sniff codes in all reports -->
+    <arg value="sp"/>
+    <!-- Show progress of the run -->
+    <arg value="p"/>
+    <!-- Show sniff names and line numbers in report -->
+    <arg value="s"/>
+    <!-- Show colors in output -->
+    <arg name="colors"/>
+    <!-- Only check PHP files -->
+    <arg name="extensions" value="php"/>
+    <!-- Use parallel processing -->
+    <arg name="parallel" value="8"/>
+    <!-- Add source codes to show where violations occur -->
+    <arg value="ns"/>
+    <!-- Show the full report -->
+    <arg name="report" value="full"/>
+    <!-- Group violations by category -->
+    <arg name="report-width" value="120"/>
+
+    <ini name="memory_limit" value="512M"/>
+
+    <!-- Check code for cross-version PHP compatibility. -->
+    <config name="minimum_supported_wp_version" value="5.6-"/>
+    <config name="testVersion" value="7.3"/>
+
+    <exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+
+    <!-- Include the WordPress-Extra standard -->
+    <rule ref="WordPress-Extra">
+        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+    </rule>
+
+    <!-- Include custom PHP compatibility sniffs -->
+    <rule ref="./Sniffs/PHP/DisallowArrowFunctionsSniff.php"/>
+    <rule ref="./Sniffs/PHP/DisallowUnionTypesSniff.php"/>
+    <rule ref="./Sniffs/PHP/ForbiddenFunctionsSniff.php"/>
+    <rule ref="./Sniffs/PHP/ForbiddenPHP8FeaturesSniff.php"/>
+    <rule ref="./Sniffs/PHP/PHP74FeaturesSniff.php"/>
+    <rule ref="./Sniffs/PHP/PHP80FeaturesSniff.php"/>
+
+    <!-- Custom DocBlock Sniff -->
+    <rule ref="./Sniffs/Commenting/FunctionDocBlockSniff.php"/>
+
+    <!-- Security Rules -->
+    <rule ref="WordPress.Security"/>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+
+    <!-- Include PHP Compatibility checking -->
+    <rule ref="PHPCompatibility"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <!-- Allow commented out code -->
+    <rule ref="Squiz.PHP.CommentedOutCode">
+        <severity>0</severity>
+    </rule>
+
+    <!-- Set posts per page to 9999 instead 100 -->
+    <rule ref="WordPress.WP.PostsPerPage">
+        <properties>
+            <property name="posts_per_page" value="9999"/>
+            <property name="posts_per_page" value="-1"/>
+        </properties>
+    </rule>
+
+    <!-- Force array syntax to be array() instead of [] -->
+    <rule ref="Generic.Arrays.DisallowShortArraySyntax"/>
+    <rule ref="Generic.Arrays.ArrayIndent"/>
+    <rule ref="Squiz.Arrays.ArrayBracketSpacing"/>
+    
+    <!-- Validate Sanitized Input -->
+    <rule ref="WordPress.Security.ValidatedSanitizedInput">
+        <properties>
+            <property name="customSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_url"/>
+                <element value="prefix_sanitize_postal_code"/>
+            </property>
+            <property name="customUnslashingSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_unslash_url"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Check for Nonce verification -->
+    <rule ref="WordPress.Security.NonceVerification">
+        <properties>
+            <property name="customSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_url"/>
+                <element value="prefix_sanitize_postal_code"/>
+            </property>
+            <property name="customUnslashingSanitizingFunctions" type="array">
+                <element value="prefix_sanitize_unslash_url"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Check for deprecated functions -->
+    <rule ref="WordPress.WP.DeprecatedFunctions"/>
+
+    <rule ref="Generic.Formatting.MultipleStatementAlignment">
+        <properties>
+            <property name="alignAtEnd" value="false"/>
+            <property name="maxPadding" value="100"/>
+            <property name="error" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- Rules: WordPress Coding Standards - see https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="uncanny-automator"/>
+                <element value="uncanny-automator-pro"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Custom sniffs -->
+    <rule ref="./Sniffs/Strings/IntegrationStringSentenceCaseSniff.php"/>
+</ruleset>

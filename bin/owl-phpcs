@@ -1,0 +1,53 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Uncanny Owl PHPCS binary.
+ */
+
+$vendorDir = null;
+
+// Try to find the vendor directory
+$paths = [
+    // If this package is the root package
+    __DIR__ . '/../vendor',
+    // If this package is installed as a dependency
+    __DIR__ . '/../../../../vendor',
+];
+
+foreach ($paths as $path) {
+    if (is_dir($path)) {
+        $vendorDir = $path;
+        break;
+    }
+}
+
+if (!$vendorDir) {
+    fwrite(STDERR, "Error: Unable to find vendor directory.\n");
+    exit(1);
+}
+
+$standard = __DIR__ . '/../Uncanny-Owl/ruleset.xml';
+if (!file_exists($standard)) {
+    fwrite(STDERR, "Error: Unable to find Uncanny Owl ruleset.\n");
+    exit(1);
+}
+
+$phpcs = $vendorDir . '/bin/phpcs';
+if (!file_exists($phpcs)) {
+    fwrite(STDERR, "Error: Unable to find PHPCS executable.\n");
+    exit(1);
+}
+
+// Build the command with proper escaping
+$files = array_map('escapeshellarg', array_slice($argv, 1));
+$cmd = sprintf(
+    '%s --standard=%s -v %s',
+    escapeshellarg($phpcs),
+    escapeshellarg($standard),
+    implode(' ', $files)
+);
+
+// Execute the command
+passthru($cmd, $return);
+exit($return); 
