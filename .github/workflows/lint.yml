@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
+  push:
+    branches:
+      - "!master"
+      - "!staging"
+      - "!pre-release"
+      - "!release/*"
+    paths:
+      - "**.php"
+      - "phpcs.xml"
+      - ".github/workflows/phpcs.yml"
+
+jobs:
+  lint:
+    uses: UncannyOwl/UOCS/.github/workflows/reusable-lint.yml@master

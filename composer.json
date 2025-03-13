@@ -12,7 +12,7 @@
   "config": {
     "platform-check": false,
     "platform": {
-      "php": "7.4"
+      "php": ">=7.4"
     },
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true,
@@ -52,18 +52,26 @@
     "issues": "https://github.com/UncannyOwl/UOCS/issues",
     "source": "https://github.com/UncannyOwl/UOCS"
   },
+  "autoload": {
+    "psr-4": {
+      "Uncanny_Automator\\": "Uncanny-Automator/"
+    }
+  },
+  "bin": [
+    "bin/automator-phpcs",
+    "bin/automator-phpcbf"
+  ],
   "scripts": {
-    "uocs": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocbf": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocs-strict": "@php ./vendor/bin/phpcs --standard=Uncanny-Owl-Strict --colors --report=full --report-width=120 --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "uocbf-strict": "@php ./vendor/bin/phpcbf --standard=Uncanny-Owl-Strict --ignore=*build*,*node_modules*,*vendor*,.git,.idea,.vscode",
-    "check-cs": [
-      "@php ./vendor/bin/phpcs"
+    "post-install-cmd": [
+      "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
+      "chmod +x bin/automator-*"
     ],
-    "fix-cs": [
-      "@php ./vendor/bin/phpcbf"
-    ],
-    "post-install-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'",
-    "post-update-cmd": "@php ./vendor/bin/phpcs --config-set installed_paths '../../wp-coding-standards/wpcs,../../phpcompatibility/php-compatibility,../../phpcompatibility/phpcompatibility-wp,../../phpcompatibility/phpcompatibility-paragonie,../../phpcsstandards/phpcsutils,../../phpcsstandards/phpcsextra,./Uncanny-Owl'"
+    "post-update-cmd": [
+      "@php -r \"if (PHP_OS_FAMILY === 'Windows') { exit(0); }\"",
+      "chmod +x bin/automator-*"
+    ]
+  },
+  "extra": {
+    "phpcodesniffer-search-depth": 5
   }
 }

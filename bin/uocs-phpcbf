@@ -1,0 +1,1 @@
+#!/usr/bin/env php\n<?php\npassthru("vendor/bin/phpcbf --standard=Uncanny-Owl " . implode(" ", array_slice(, 1)));

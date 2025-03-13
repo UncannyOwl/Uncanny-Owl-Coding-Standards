@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - "**.php"
+      - "!vendor/**"
+      - "!tests/**"
+      - "!**/tests/**"
+
+# Ensure this runs first
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Code Style Check
+    uses: UncannyOwl/UOCS/.github/workflows/reusable-lint.yml@main
+    # Optionally specify custom paths:
+    # with:
+    #   paths: |
+    #     src/**/*.php
+    #     includes/**/*.php 
+
+  # Example of how other jobs should wait for lint
+  other_checks:
+    name: Other Checks
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This job will wait for lint to complete" 

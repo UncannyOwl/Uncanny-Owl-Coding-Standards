@@ -82,3 +82,13 @@ $is_valid_value = $value_check > 0 ? true : throw new Exception("Value must be p
 $weak_map = new WeakMap(); // PHP 8.0+ (should fail)
 $object_instance = new stdClass();
 $weak_map[$object_instance] = "Some data";
+
+$some_array = [
+    'key' => 'value',
+    'key2' => 'value2',
+    'key3' => 'value3',
+];
+
+function space_test($value){
+    return $value;
+}
