@@ -35,8 +35,10 @@
     <exclude-pattern>*/tests/*</exclude-pattern>
     <exclude-pattern>*.min.js</exclude-pattern>
 
-    <!-- Include the WordPress-Extra standard. -->
-    <rule ref="WordPress-Extra"/>
+    <!-- Include the WordPress-Extra standard -->
+    <rule ref="WordPress-Extra">
+        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+    </rule>
 
     <!-- Include custom PHP compatibility sniffs -->
     <rule ref="./Sniffs/PHP/DisallowArrowFunctionsSniff.php"/>
@@ -46,6 +48,10 @@
     <rule ref="./Sniffs/PHP/PHP74FeaturesSniff.php"/>
     <rule ref="./Sniffs/PHP/PHP80FeaturesSniff.php"/>
 
+    <!-- Custom DocBlock Sniff -->
+    <rule ref="./Sniffs/Commenting/FunctionDocBlockSniff.php"/>
+
+    <!-- Security Rules -->
     <rule ref="WordPress.Security"/>
     <rule ref="WordPress.DB.PreparedSQL"/>
     <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
@@ -54,12 +60,7 @@
     <rule ref="PHPCompatibility"/>
     <rule ref="PHPCompatibilityWP"/>
 
-    <rule ref="Squiz.Commenting">
-        <severity>0</severity>
-    </rule>
-    <rule ref="Squiz.Commenting.FunctionComment.MissingParamName">
-        <severity>0</severity>
-    </rule>
+    <!-- Allow commented out code -->
     <rule ref="Squiz.PHP.CommentedOutCode">
         <severity>0</severity>
     </rule>
@@ -114,9 +115,16 @@
         </properties>
     </rule>
 
-    <rule ref="WordPress.Files.FileName">
+    <!-- Rules: WordPress Coding Standards - see https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards -->
+    <rule ref="WordPress.WP.I18n">
         <properties>
-            <property name="strict_class_file_names" value="false"/>
+            <property name="text_domain" type="array">
+                <element value="uncanny-automator"/>
+                <element value="uncanny-automator-pro"/>
+            </property>
         </properties>
     </rule>
+
+    <!-- Custom sniffs -->
+    <rule ref="./Sniffs/Strings/IntegrationStringSentenceCaseSniff.php"/>
 </ruleset>
