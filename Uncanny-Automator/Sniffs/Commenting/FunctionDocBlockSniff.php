@@ -31,18 +31,40 @@ class FunctionDocBlockSniff implements Sniff {
 			return;
 		}
 
-		// Get function's scope
-		$function = $tokens[$stackPtr];
-		
-		// Get the previous non-whitespace token
-		$commentEnd = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
-		
-		// No comment found
-		if ($commentEnd === false || $tokens[$commentEnd]['code'] !== T_DOC_COMMENT_CLOSE_TAG) {
+		// Get function name
+		$functionName = $phpcsFile->getDeclarationName($stackPtr);
+		if ($functionName === null) {
+			return;
+		}
+
+		// Find the closest comment before the function
+		$commentEnd = $phpcsFile->findPrevious(
+			array(T_DOC_COMMENT_CLOSE_TAG, T_COMMENT),
+			($stackPtr - 1),
+			null,
+			false,
+			null,
+			true
+		);
+
+		// No comment found at all
+		if ($commentEnd === false) {
 			$phpcsFile->addError(
-				'Missing function doc comment',
+				'Missing function doc comment for function %s',
 				$stackPtr,
-				'Missing'
+				'Missing',
+				array($functionName)
+			);
+			return;
+		}
+
+		// If it's not a doc comment or not immediately before the function, report error
+		if ($tokens[$commentEnd]['code'] !== T_DOC_COMMENT_CLOSE_TAG) {
+			$phpcsFile->addError(
+				'Missing function doc comment for function %s',
+				$stackPtr,
+				'Missing',
+				array($functionName)
 			);
 			return;
 		}
@@ -50,39 +72,24 @@ class FunctionDocBlockSniff implements Sniff {
 		// Get the start of the doc comment
 		$commentStart = $tokens[$commentEnd]['comment_opener'];
 
-		// Check for @param tags
-		$params = $phpcsFile->getMethodParameters($stackPtr);
-		$commentParams = array();
-		
+		// Get the comment's content
+		$comment = '';
 		for ($i = $commentStart; $i <= $commentEnd; $i++) {
-			if ($tokens[$i]['code'] === T_DOC_COMMENT_TAG && $tokens[$i]['content'] === '@param') {
-				$commentParams[] = $i;
-			}
+			$comment .= $tokens[$i]['content'];
 		}
 
-		if (count($params) > 0 && empty($commentParams)) {
+		// If it's not a proper doc block (doesn't start with /**), report error
+		if (strpos(trim($comment), '/**') !== 0) {
 			$phpcsFile->addError(
-				'Missing @param tag in function doc comment',
+				'Doc comment must start with /** for function %s',
 				$stackPtr,
-				'MissingParamTag'
+				'InvalidFormat',
+				array($functionName)
 			);
+			return;
 		}
 
-		// Check for @return tag
-		$hasReturn = false;
-		for ($i = $commentStart; $i <= $commentEnd; $i++) {
-			if ($tokens[$i]['code'] === T_DOC_COMMENT_TAG && $tokens[$i]['content'] === '@return') {
-				$hasReturn = true;
-				break;
-			}
-		}
-
-		if (!$hasReturn) {
-			$phpcsFile->addError(
-				'Missing @return tag in function doc comment',
-				$stackPtr,
-				'MissingReturn'
-			);
-		}
+		// At this point, we have a valid doc block, so accept it
+		return;
 	}
 } 
