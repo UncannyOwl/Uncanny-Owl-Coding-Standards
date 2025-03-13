@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Uncanny Owl" namespace="UO\CS"
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Automator API" namespace="UO\API"
          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
 
-    <description>Coding standards used for the Uncanny Automator.</description>
+    <description>Coding standards for Automator API (Slim Framework)</description>
 
     <!-- Show sniff codes in all reports -->
     <arg value="sp"/>
@@ -25,165 +25,93 @@
 
     <ini name="memory_limit" value="512M"/>
 
-    <!-- Check code for cross-version PHP compatibility. -->
-    <config name="minimum_supported_wp_version" value="5.6-"/>
-    <config name="testVersion" value="7.3"/>
+    <!-- PHP Version Configuration -->
+    <config name="testVersion" value="8.2-"/>
 
-    <exclude-pattern>/bin/class-ruleset-test.php</exclude-pattern>
-    <exclude-pattern>*/node_modules/*</exclude-pattern>
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*.min.js</exclude-pattern>
+    <!-- Exclude patterns -->
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/tests/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/build/*</exclude-pattern>
+    <exclude-pattern>/dist/*</exclude-pattern>
+    <exclude-pattern>*.js</exclude-pattern>
+    <exclude-pattern>*.css</exclude-pattern>
 
-    <!-- Include the WordPress-Extra standard. -->
-    <rule ref="WordPress-Extra">
-        <!-- Exclude rules that conflict with our standards -->
-        <exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
-        <exclude name="WordPress.Arrays.MultipleStatementAlignment"/>
-        <exclude name="WordPress.PHP.YodaConditions"/>
-        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
-        <exclude name="Squiz.Commenting"/>
-        <exclude name="Generic.Commenting"/>
-    </rule>
+    <!-- PSR-12 Standard (includes PSR-1 and PSR-2) -->
+    <rule ref="PSR12"/>
 
-    <!-- Include Uncanny Automator specific rules if available -->
-    <rule ref="Uncanny_Automator">
-        <exclude name="Squiz.Commenting"/>
-    </rule>
-
-    <!-- Security related rules - keep these strict -->
-    <rule ref="WordPress.Security"/>
-    <rule ref="WordPress.DB.PreparedSQL"/>
-    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
-
-    <!-- Include PHP Compatibility checking -->
+    <!-- PHP Compatibility -->
     <rule ref="PHPCompatibility"/>
-    <rule ref="PHPCompatibilityWP"/>
 
-    <!-- Customize specific rules -->
-    <rule ref="WordPress.WP.PostsPerPage">
-        <properties>
-            <property name="posts_per_page" value="9999"/>
-            <property name="posts_per_page" value="-1"/>
-        </properties>
-    </rule>
-
-    <!-- Validate Sanitized Input -->
-    <rule ref="WordPress.Security.ValidatedSanitizedInput">
-        <properties>
-            <property name="customSanitizingFunctions" type="array">
-                <element value="prefix_sanitize_url"/>
-                <element value="prefix_sanitize_postal_code"/>
-            </property>
-            <property name="customUnslashingSanitizingFunctions" type="array">
-                <element value="prefix_sanitize_unslash_url"/>
-            </property>
-        </properties>
-    </rule>
-
-    <!-- Formatting rules that align with WordPress but are more lenient -->
-    <rule ref="Generic.Formatting.MultipleStatementAlignment">
-        <properties>
-            <property name="alignAtEnd" value="false"/>
-            <property name="maxPadding" value="100"/>
-            <property name="error" value="false"/>
-        </properties>
-    </rule>
-
-    <!-- Allow more flexible file naming -->
-    <rule ref="WordPress.Files.FileName">
-        <properties>
-            <property name="strict_class_file_names" value="false"/>
-        </properties>
-    </rule>
-
-    <!-- 1. Syntax and Basic Formatting -->
+    <!-- Additional Rules -->
     <rule ref="Generic.PHP.Syntax"/>
-    <rule ref="PSR2.Files.EndFileNewline"/>
-
-    <!-- 2. String and Quote Usage -->
-    <rule ref="Squiz.Strings.DoubleQuoteUsage">
-        <type>warning</type>
-        <message>Use single quotes unless interpolating variables</message>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="120"/>
+        </properties>
     </rule>
 
-    <!-- 3. Array Formatting -->
-    <rule ref="WordPress.Arrays.ArrayKeySpacingRestrictions">
-        <type>warning</type>
-        <message>Array key should not have surrounding spaces</message>
+    <!-- Strict Types Declaration -->
+    <rule ref="Generic.PHP.RequireStrictTypes"/>
+
+    <!-- Type Hints -->
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint">
+        <properties>
+            <property name="enableObjectTypeHint" value="true"/>
+        </properties>
+    </rule>
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
+
+    <!-- Clean Code Rules -->
+    <rule ref="SlevomatCodingStandard.Classes.UnusedPrivateElements"/>
+    <rule ref="SlevomatCodingStandard.Functions.UnusedParameter"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses"/>
+    <rule ref="SlevomatCodingStandard.Namespaces.UseSpacing"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes"/>
+
+    <!-- Array Formatting -->
+    <rule ref="Generic.Arrays.ArrayIndent"/>
+    <rule ref="Squiz.Arrays.ArrayDeclaration">
+        <exclude name="Squiz.Arrays.ArrayDeclaration.SingleLineNotAllowed"/>
     </rule>
 
-    <!-- 4. Function Formatting -->
-    <rule ref="Squiz.Functions.FunctionDeclarationArgumentSpacing">
-        <type>warning</type>
-        <message>Arguments should have consistent spacing</message>
+    <!-- Function Rules -->
+    <rule ref="Generic.Functions.OpeningFunctionBraceBsdAllman">
+        <exclude name="Generic.Functions.OpeningFunctionBraceBsdAllman.BraceOnSameLine"/>
     </rule>
 
-    <rule ref="PEAR.Functions.FunctionCallSignature">
-        <type>warning</type>
-        <message>Function call should have consistent spacing</message>
+    <!-- Security -->
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="eval" value="null"/>
+                <element key="dd" value="null"/>
+                <element key="die" value="null"/>
+                <element key="var_dump" value="null"/>
+                <element key="print_r" value="null"/>
+            </property>
+        </properties>
     </rule>
 
-    <!-- 5. Class Structure -->
-    <rule ref="Generic.Classes.OpeningBraceSameLine">
-        <type>warning</type>
-        <message>Opening brace should be on the same line</message>
-    </rule>
+    <!-- Naming Conventions -->
+    <rule ref="Generic.NamingConventions.UpperCaseConstantName"/>
+    <rule ref="Generic.NamingConventions.CamelCapsFunctionName"/>
 
-    <rule ref="PEAR.NamingConventions.ValidClassName">
-        <type>warning</type>
-        <message>Class names must start with a capital letter</message>
-    </rule>
+    <!-- Class Structure -->
+    <rule ref="PSR1.Classes.ClassDeclaration"/>
+    <rule ref="Squiz.Classes.ValidClassName"/>
 
-    <!-- 6. File Organization -->
-    <rule ref="Generic.Files.OneObjectStructurePerFile">
-        <type>warning</type>
-        <message>Only one class/interface/trait is allowed per file</message>
-    </rule>
+    <!-- Modern PHP Features -->
+    <rule ref="SlevomatCodingStandard.Classes.ModernClassNameReference"/>
+    <rule ref="SlevomatCodingStandard.Functions.ArrowFunctionDeclaration"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.UnionTypeHintFormat"/>
+    <rule ref="SlevomatCodingStandard.Classes.ClassStructure"/>
 
-    <rule ref="Universal.Files.SeparateFunctionsFromOO">
-        <type>warning</type>
-        <message>Functions should be in separate files from classes</message>
-    </rule>
-
-    <!-- 7. PHP Version Compatibility -->
-    <rule ref="PHPCompatibility.Classes.NewTypedProperties">
-        <type>error</type>
-        <message>Typed properties require PHP 7.4+</message>
-    </rule>
-
-    <rule ref="PHPCompatibility.Operators.NewOperators">
-        <type>error</type>
-        <message>This operator requires a newer PHP version</message>
-    </rule>
-
-    <!-- 8. Uncanny Automator Specific -->
-    <rule ref="Uncanny_Automator.PHP.DisallowUnionTypes">
-        <type>error</type>
-        <message>Union types are not allowed</message>
-    </rule>
-
-    <rule ref="Uncanny_Automator.PHP.ForbiddenPHP8Features">
-        <type>error</type>
-        <message>This PHP 8 feature is not allowed</message>
-    </rule>
-
-    <rule ref="Uncanny_Automator.PHP.PHP74Features">
-        <type>error</type>
-        <message>This PHP 7.4 feature is not allowed</message>
-    </rule>
-
-    <!-- 9. Security -->
-    <rule ref="WordPress.Security.EscapeOutput">
-        <type>error</type>
-        <message>Output must be escaped</message>
-    </rule>
-
-    <!-- Exclude some overly strict rules -->
-    <rule ref="Squiz.PHP.CommentedOutCode">
-        <severity>0</severity>
-    </rule>
-
-    <rule ref="WordPress.WP.AlternativeFunctions">
-        <severity>0</severity>
-    </rule>
+    <!-- Docblock Rules -->
+    <rule ref="Generic.Commenting.DocComment"/>
+    <rule ref="Squiz.Commenting.FunctionComment"/>
+    <rule ref="Squiz.Commenting.VariableComment"/>
 </ruleset>

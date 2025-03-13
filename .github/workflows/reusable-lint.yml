@@ -15,6 +15,11 @@ on:
           !build/**
           !dist/**
         type: string
+      standard:
+        description: 'Which standard to use (Uncanny-Automator, Automator-API, or Uncanny-Owl)'
+        required: false
+        default: 'Uncanny-Automator'
+        type: string
     outputs:
       lint_completed:
         description: "Indicates if linting was completed"
@@ -43,12 +48,22 @@ jobs:
       - name: Install Uncanny Coding Standards
         if: steps.changed-files.outputs.all_changed_files != ''
         run: |
-          composer require --dev uocs/uncanny-owl-coding-standards
+          composer require --dev uocs/uncanny-owl-coding-standards:dev-main
 
       - name: Run PHPCBF
         if: steps.changed-files.outputs.all_changed_files != ''
         run: |
-          ./vendor/bin/automator-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+          case "${{ inputs.standard }}" in
+            "Automator-API")
+              ./vendor/bin/api-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+            "Uncanny-Owl")
+              ./vendor/bin/owl-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+            *)
+              ./vendor/bin/automator-phpcbf ${{ steps.changed-files.outputs.all_changed_files }} || true
+              ;;
+          esac
 
       - name: Add & Commit
         if: steps.changed-files.outputs.all_changed_files != ''

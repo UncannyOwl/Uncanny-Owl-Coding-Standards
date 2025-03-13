@@ -17,11 +17,16 @@ jobs:
   lint:
     name: Code Style Check
     uses: UncannyOwl/UOCS/.github/workflows/reusable-lint.yml@main
-    # Optionally specify custom paths:
-    # with:
-    #   paths: |
-    #     src/**/*.php
-    #     includes/**/*.php 
+    with:
+      # Choose one of:
+      # - 'Uncanny-Automator' for WordPress plugin projects
+      # - 'Automator-API' for Slim Framework API projects
+      # - 'Uncanny-Owl' for other WordPress projects
+      standard: Automator-API
+      # Optionally specify custom paths:
+      # paths: |
+      #   src/**/*.php
+      #   app/**/*.php
 
   # Example of how other jobs should wait for lint
   other_checks:
