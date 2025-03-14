@@ -32,12 +32,11 @@ class SentenceCaseSniff implements Sniff {
 	);
 
 	/**
-	 * Words that should remain capitalized.
+	 * Core reserved words that should always maintain specific casing.
 	 *
 	 * @var array
 	 */
-	private $exceptions = array(
-		// Core exceptions that should always be preserved
+	private $core_reserved = array(
 		'WordPress',
 		'PHP',
 		'API',
@@ -135,51 +134,33 @@ class SentenceCaseSniff implements Sniff {
 	);
 
 	/**
-	 * Project-specific exceptions loaded from configuration.
+	 * Project-specific reserved words loaded from configuration.
 	 *
 	 * @var array
 	 */
-	private $project_exceptions = array();
+	private $project_reserved = array();
 
 	/**
-	 * Initialize the sniff by loading project-specific exceptions.
-	 *
-	 * @return void
+	 * Initialize the sniff by loading project-specific reserved words.
 	 */
 	public function __construct() {
-		$this->load_project_exceptions();
+		$this->load_project_reserved();
 	}
 
 	/**
-	 * Load project-specific exceptions from configuration file.
-	 *
-	 * The configuration file should be named 'sentence-case-exceptions.php' and placed
-	 * in the project root or a '.phpcs' directory. It should return an array of
-	 * strings that should be preserved in their original case.
-	 *
-	 * Example configuration file:
-	 * <?php
-	 * return array(
-	 *     'Uncanny Automator',
-	 *     'Automator',
-	 *     'Uncanny Automator Pro',
-	 *     'Automator Pro',
-	 *     'Uncanny Owl',
-	 * );
-	 *
-	 * @return void
+	 * Load project-specific reserved words from configuration file.
 	 */
-	private function load_project_exceptions() {
+	private function load_project_reserved() {
 		$config_paths = array(
 			'sentence-case-exceptions.php',
 			'.phpcs/sentence-case-exceptions.php',
 		);
 
-		foreach ($config_paths as $path) {
-			if (file_exists($path)) {
+		foreach ( $config_paths as $path ) {
+			if ( file_exists( $path ) ) {
 				$exceptions = include $path;
-				if (is_array($exceptions)) {
-					$this->project_exceptions = array_merge($this->project_exceptions, $exceptions);
+				if ( is_array( $exceptions ) ) {
+					$this->project_reserved = array_merge( $this->project_reserved, $exceptions );
 				}
 				break;
 			}
@@ -192,7 +173,7 @@ class SentenceCaseSniff implements Sniff {
 	 * @return array
 	 */
 	public function register() {
-		return array(T_CONSTANT_ENCAPSED_STRING);
+		return array( T_CONSTANT_ENCAPSED_STRING );
 	}
 
 	/**
@@ -200,132 +181,117 @@ class SentenceCaseSniff implements Sniff {
 	 *
 	 * @param File $phpcs_file The PHP_CodeSniffer file where the token was found.
 	 * @param int  $stack_ptr  The position in the PHP_CodeSniffer file's token stack where the token was found.
-	 *
-	 * @return void
 	 */
-	public function process(File $phpcs_file, $stack_ptr) {
+	public function process( File $phpcs_file, $stack_ptr ) {
 		$tokens = $phpcs_file->getTokens();
-		$token = $tokens[$stack_ptr];
+		$token = $tokens[ $stack_ptr ];
 
 		// Get the string content without quotes
-		$string = trim($token['content'], "\"'");
+		$string = trim( $token['content'], "\"'" );
 
 		// Skip empty strings
-		if (empty($string) || strlen($string) < 2) {
+		if ( empty( $string ) ) {
 			return;
 		}
 
 		// Check if this string is part of a translation function
-		$prev_token = $phpcs_file->findPrevious(T_STRING, $stack_ptr - 2, $stack_ptr - 5);
-		if (false === $prev_token) {
+		$prev_token = $phpcs_file->findPrevious( T_STRING, $stack_ptr - 2, $stack_ptr - 5 );
+		if ( false === $prev_token ) {
 			return;
 		}
 
-		$function_name = $tokens[$prev_token]['content'];
-		if (!in_array($function_name, $this->translation_functions, true)) {
+		$function_name = $tokens[ $prev_token ]['content'];
+		if ( ! in_array( $function_name, $this->translation_functions, true ) ) {
 			return;
 		}
 
-		// Skip if string should not be checked
-		if ($this->should_skip_string($string)) {
-			return;
-		}
+		// Find all words that need case correction
+		$corrections = $this->find_case_corrections( $string );
 
-		// Check sentence case
-		$words = explode(' ', $string);
-		$word_count = count($words);
-		$capitalized_words = array();
-
-		for ($i = 1; $i < $word_count; $i++) {
-			$word = $words[$i];
-			if (!$this->is_exception($word) && '' !== $word && ctype_upper($word[0])) {
-				$capitalized_words[] = $word;
-			}
-		}
-
-		if (!empty($capitalized_words)) {
-			$fix = $phpcs_file->addFixableError(
-				sprintf(
-					'String "%s" contains incorrectly capitalized words: "%s". Use sentence case instead: "%s"',
-					$string,
-					implode('", "', $capitalized_words),
-					$this->convert_to_sentence_case($string)
-				),
-				$stack_ptr,
-				'CapitalizedWords'
+		if ( ! empty( $corrections ) ) {
+			$error_msg = sprintf(
+				'Reserved words have incorrect case: %s',
+				implode(
+					', ',
+					array_map(
+						function ( $word, $correct ) {
+							return sprintf( '"%s" should be "%s"', $word, $correct );
+						},
+						array_keys( $corrections ),
+						$corrections
+					)
+				)
 			);
 
-			if (true === $fix) {
-				$quote = $token['content'][0];
-				if ("'" === $quote && false !== strpos($string, "'")) {
-					$quote = '"';
-				}
-				$new_content = $quote . $this->convert_to_sentence_case($string) . $quote;
-				$phpcs_file->fixer->replaceToken($stack_ptr, $new_content);
+			$fix = $phpcs_file->addFixableError(
+				$error_msg,
+				$stack_ptr,
+				'IncorrectReservedWordCase'
+			);
+
+			if ( $fix ) {
+				$fixed_string = $this->apply_corrections( $string, $corrections );
+				$phpcs_file->fixer->replaceToken(
+					$stack_ptr,
+					sprintf( '"%s"', $fixed_string )
+				);
 			}
 		}
 	}
 
 	/**
-	 * Check if the string should be skipped for sentence case validation.
+	 * Find words that need case correction in a string.
 	 *
 	 * @param string $string The string to check.
-	 * @return bool
+	 * @return array Array of incorrect => correct case pairs.
 	 */
-	private function should_skip_string($string) {
-		// Skip URLs
-		if (filter_var($string, FILTER_VALIDATE_URL)) {
-			return true;
+	private function find_case_corrections( $string ) {
+		$corrections = array();
+		$words = str_word_count( $string, 1 );
+
+		// Check for URLs and add them to corrections if not lowercase
+		if ( preg_match_all( '/(https?:\/\/[^\s]+)/i', $string, $matches ) ) {
+			foreach ( $matches[0] as $url ) {
+				$lowercase_url = strtolower( $url );
+				if ( $url !== $lowercase_url ) {
+					$corrections[ $url ] = $lowercase_url;
+				}
+			}
+			// Skip checking other words if URL is found
+			return $corrections;
 		}
 
-		// Skip file paths
-		if (false !== strpos($string, '/') || false !== strpos($string, '\\')) {
-			return true;
-		}
+		foreach ( $words as $word ) {
+			// Check core reserved words
+			foreach ( $this->core_reserved as $reserved ) {
+				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
+					$corrections[ $word ] = $reserved;
+				}
+			}
 
-		// Skip strings with special characters, but allow apostrophes
-		if (preg_match('/[^a-zA-Z0-9\s\']/', $string)) {
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if the word is an exception that should remain capitalized.
-	 *
-	 * @param string $word The word to check.
-	 * @return bool
-	 */
-	private function is_exception($word) {
-		// Remove any apostrophes for checking exceptions
-		$word = str_replace("'", '', $word);
-		
-		// Check both core and project-specific exceptions
-		return in_array($word, $this->exceptions, true) || in_array($word, $this->project_exceptions, true);
-	}
-
-	/**
-	 * Convert a string to sentence case.
-	 *
-	 * @param string $string The string to convert.
-	 * @return string
-	 */
-	private function convert_to_sentence_case($string) {
-		$words = explode(' ', $string);
-		
-		// Capitalize first word
-		$words[0] = ucfirst($words[0]);
-		
-		$word_count = count($words);
-		
-		// Convert rest to lowercase unless they're exceptions
-		for ($i = 1; $i < $word_count; $i++) {
-			if (!$this->is_exception($words[$i])) {
-				$words[$i] = strtolower($words[$i]);
+			// Check project reserved words
+			foreach ( $this->project_reserved as $reserved ) {
+				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
+					$corrections[ $word ] = $reserved;
+				}
 			}
 		}
-		
-		return implode(' ', $words);
+
+		return $corrections;
+	}
+
+	/**
+	 * Apply case corrections to a string.
+	 *
+	 * @param string $string The original string.
+	 * @param array  $corrections Array of incorrect => correct case pairs.
+	 * @return string The corrected string.
+	 */
+	private function apply_corrections( $string, $corrections ) {
+		$result = $string;
+		foreach ( $corrections as $incorrect => $correct ) {
+			$result = str_ireplace( $incorrect, $correct, $result );
+		}
+		return $result;
 	}
 } 

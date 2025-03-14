@@ -47,6 +47,12 @@ class Test_Integration {
 		// This should pass - proper case with special terms
 		esc_html__( 'Send WordPress REST API request', 'uncanny-automator' );
 
+		// This should fail - inproper case with special terms
+		esc_html__( 'Send wordpress REST API request', 'uncanny-automator' );
+
+		// This should fail - inproper case with special terms
+		esc_html__( 'Send uncanny REST API request', 'uncanny-automator' );
+
 		// This should pass - has context and proper case with special terms
 		esc_html_x( 'Send WordPress REST API request', 'API connection button label', 'uncanny-automator' );
 
@@ -63,7 +69,7 @@ class Test_Integration {
 		esc_html_x( 'Send email to user', 'Action button label', 'uncanny-automator' );
 
 		// This should pass - URL with context
-		esc_html_x( 'Visit https://UncannyOwl.com/Docs', 'Documentation link text', 'uncanny-automator' );
+		esc_html_x( 'Visit hTTps://UncannyOwl.com/Docs', 'Documentation link text', 'uncanny-automator' );
 
 		// This should fail - escaped single quote
 		esc_html__( "User's Profile & Settings", 'uncanny-automator' );
