@@ -68,7 +68,7 @@ class TranslatorCommentSniff implements Sniff {
 	 * @return array
 	 */
 	public function register() {
-		return array( T_CONSTANT_ENCAPSED_STRING );
+		return array( T_STRING );
 	}
 
 	/**
@@ -76,51 +76,74 @@ class TranslatorCommentSniff implements Sniff {
 	 *
 	 * @param File $phpcs_file The PHP_CodeSniffer file where the token was found.
 	 * @param int  $stack_ptr  The position in the PHP_CodeSniffer file's token stack where the token was found.
-	 *
-	 * @return void
 	 */
 	public function process( File $phpcs_file, $stack_ptr ) {
 		$tokens = $phpcs_file->getTokens();
 
-		// Check if this string is part of a translation function
-		$prev_token = $phpcs_file->findPrevious( T_STRING, $stack_ptr - 2, $stack_ptr - 5 );
-		if ( false === $prev_token ) {
-			return;
-		}
-
-		$function_name = $tokens[ $prev_token ]['content'];
+		// Only check translation functions
+		$function_name = $tokens[ $stack_ptr ]['content'];
 		if ( ! in_array( $function_name, $this->translation_functions, true ) ) {
 			return;
 		}
 
-		$string = trim( $tokens[ $stack_ptr ]['content'], "\"'" );
+		// Find the string argument
+		$string_ptr = $phpcs_file->findNext( T_CONSTANT_ENCAPSED_STRING, $stack_ptr + 1 );
+		if ( false === $string_ptr ) {
+			return;
+		}
 
-		// Check for translator comments on strings with placeholders
-		if ( $this->has_placeholders( $string ) ) {
-			$comment_ptr = $phpcs_file->findPrevious( T_COMMENT, $stack_ptr - 1, $stack_ptr - 3 );
-			if ( false === $comment_ptr || false === strpos( $tokens[ $comment_ptr ]['content'], 'translators:' ) ) {
-				$phpcs_file->addError(
-					'String with placeholders must have a translator comment. Add a "// translators:" comment.',
-					$stack_ptr,
-					'MissingTranslatorComment'
-				);
-			}
+		$string = $tokens[ $string_ptr ]['content'];
+
+		// Check if string has placeholders
+		if ( ! $this->has_placeholders( $string ) ) {
+			return;
+		}
+
+		// Look for translator comment
+		$comment_ptr = $phpcs_file->findPrevious( array( T_COMMENT, T_DOC_COMMENT_OPEN_TAG ), $stack_ptr - 1 );
+		if ( false === $comment_ptr ) {
+			$phpcs_file->addError(
+				'String with placeholders must have a translator comment. Add a "// translators:" or "/* translators: */" comment.',
+				$stack_ptr,
+				'MissingTranslatorComment'
+			);
+			return;
+		}
+
+		// Check if it's a valid translator comment
+		$comment = $tokens[ $comment_ptr ]['content'];
+		if ( ! $this->is_valid_translator_comment( $comment ) ) {
+			$phpcs_file->addError(
+				'Invalid translator comment format. Use "// translators:" or "/* translators: */" followed by placeholder descriptions.',
+				$comment_ptr,
+				'InvalidTranslatorComment'
+			);
 		}
 	}
 
 	/**
-	 * Check if a string contains placeholders that require translator comments.
+	 * Check if a string contains placeholders.
 	 *
 	 * @param string $string The string to check.
 	 * @return bool
 	 */
 	private function has_placeholders( $string ) {
-		foreach ( $this->placeholder_patterns as $pattern ) {
-			if ( false !== strpos( $string, $pattern ) ) {
-				return true;
-			}
-		}
-		return false;
+		return preg_match( '/%(?:[0-9]+\$)?[ds]/', $string ) ||
+			   strpos( $string, '%s' ) !== false ||
+			   strpos( $string, '%d' ) !== false;
+	}
+
+	/**
+	 * Check if a comment is a valid translator comment.
+	 *
+	 * @param string $comment The comment to check.
+	 * @return bool
+	 */
+	private function is_valid_translator_comment( $comment ) {
+		$comment = trim( $comment, '/* ' );
+		return ( strpos( $comment, 'translators:' ) === 0 ||
+			   strpos( $comment, 'translator:' ) === 0 ) &&
+			   strlen( $comment ) > 12;
 	}
 
 	/**
