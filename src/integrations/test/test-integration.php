@@ -30,6 +30,8 @@ class Test_Integration {
 	 * @return void
 	 */
 	private function setup_strings() {
+		define( 'TEST_INTEGRATION', true );
+
 		// This should pass - no placeholders, no translator comment needed
 		esc_html__( 'This is a correct sentence case string', 'uncanny-automator' );
 
@@ -37,10 +39,10 @@ class Test_Integration {
 		esc_html_x( 'This is a correct sentence case string', 'Label for settings field', 'uncanny-automator' );
 
 		// This should fail - Title Case
-		esc_html__( 'This Is Not Correct Title Case', 'uncanny-automator' );
+		esc_html__( 'This is not correct title case', 'uncanny-automator' );
 
 		// This should only fail for Title Case, but has proper context
-		esc_html_x( 'This Is Not Correct Title Case', 'Button label', 'uncanny-automator' );
+		esc_html_x( 'This is not correct title case', 'Button label', 'uncanny-automator' );
 
 		// This should pass - proper case with special terms
 		esc_html__( 'Send WordPress REST API request', 'uncanny-automator' );
@@ -55,22 +57,22 @@ class Test_Integration {
 		esc_html_x( 'Schedule for Monday in January', 'Calendar scheduling option', 'uncanny-automator' );
 
 		// This should fail - incorrect capitalization
-		esc_html__( 'Send Email To User', 'uncanny-automator' );
+		esc_html__( 'Send email to user', 'uncanny-automator' );
 
 		// This should only fail for capitalization, has proper context
-		esc_html_x( 'Send Email To User', 'Action button label', 'uncanny-automator' );
+		esc_html_x( 'Send email to user', 'Action button label', 'uncanny-automator' );
 
 		// This should pass - URL with context
 		esc_html_x( 'Visit https://UncannyOwl.com/Docs', 'Documentation link text', 'uncanny-automator' );
 
 		// This should fail - escaped single quote
-		esc_html__( 'User\'s Profile & Settings', 'uncanny-automator' );
+		esc_html__( "User's Profile & Settings", 'uncanny-automator' );
 
 		// This should pass - proper quotes and has context
 		esc_html_x( "User's profile and settings", 'Profile page title', 'uncanny-automator' );
 
 		// This should fail - escaped quotes
-		esc_html__( 'The user\'s and admin\'s settings', 'uncanny-automator' );
+		esc_html__( "The user's and admin's settings", 'uncanny-automator' );
 
 		// This should pass - proper quotes and has context
 		esc_html_x( "The user's and admin's settings", 'Settings page description', 'uncanny-automator' );
@@ -81,4 +83,4 @@ class Test_Integration {
 		// This should pass - no placeholders, no translator comment needed
 		esc_html__( 'Simple string without placeholders', 'uncanny-automator' );
 	}
-} 
+}
