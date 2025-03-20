@@ -74,12 +74,6 @@ class StringQuotingSniff implements Sniff {
 		$tokens = $phpcs_file->getTokens();
 		$token = $tokens[$stack_ptr];
 		
-		// Get file name/path and check if it's a Discord file - SKIP ALL DISCORD FILES
-		$file_path = strtolower($phpcs_file->getFilename());
-		if (strpos($file_path, 'discord') !== false || strpos($file_path, '/integrations/discord/') !== false) {
-			return;
-		}
-
 		// Get the string's quote character
 		$quote_char = $token['content'][0];
 		
@@ -111,35 +105,30 @@ class StringQuotingSniff implements Sniff {
 		if ($is_translation) {
 			$string_content = substr($token['content'], 1, -1); // Strip outer quotes
 			
-			// Skip if the string contains any double quotes or HTML-like content
-			if (strpos($string_content, '"') !== false ||
-				strpos($string_content, '<') !== false ||
-				strpos($string_content, '>') !== false ||
-				strpos($string_content, 'href') !== false ||
-				strpos($string_content, 'src') !== false ||
-				strpos($string_content, 'target') !== false ||
+			// Skip if the string contains any of these patterns
+			if (strpos($string_content, '"') !== false ||      // Has double quotes
+				strpos($string_content, '<') !== false ||      // Has HTML
+				strpos($string_content, '>') !== false ||      // Has HTML
+				strpos($string_content, 'href=') !== false ||  // Has HTML attributes
+				strpos($string_content, 'src=') !== false ||
+				strpos($string_content, 'target=') !== false ||
 				strpos($string_content, '_blank') !== false ||
-				strpos($string_content, 'http') !== false ||
+				strpos($string_content, 'http') !== false ||   // Has URLs
 				strpos($string_content, 'www.') !== false ||
 				strpos($string_content, '.com') !== false ||
-				strpos($string_content, '.org') !== false) {
+				strpos($string_content, '.org') !== false ||
+				strpos($string_content, '%d') !== false ||     // Has sprintf placeholders
+				strpos($string_content, '%s') !== false ||
+				strpos($string_content, '%f') !== false ||
+				preg_match('/ID\b/i', $string_content) ||      // Contains ID as a word
+				preg_match('/\b[A-Z]{2,}\b/', $string_content) // Contains acronyms
+				) {
 				return;
 			}
 			
 			// Don't convert strings with complex escaping patterns
 			if (strpos($string_content, '\\\\') !== false || // Double backslash
 				preg_match('/\\\\[^\'"]/', $string_content)) { // Other escaped characters besides quotes
-				return;
-			}
-			
-			// Don't convert strings with sprintf-style placeholders
-			if (preg_match('/%\d+\$[sd]/', $string_content)) {
-				return;
-			}
-			
-			// Check if this looks like a date format string
-			$date_format_pattern = implode('|', array_map('preg_quote', $this->date_format_chars));
-			if (preg_match('/^[\\\\\'"\s]*([' . $date_format_pattern . ']\s*[^a-zA-Z0-9]*\s*)+[\\\\\'"\s]*$/', $string_content)) {
 				return;
 			}
 			
