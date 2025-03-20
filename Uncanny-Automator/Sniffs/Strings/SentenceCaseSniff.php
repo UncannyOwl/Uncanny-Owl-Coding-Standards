@@ -40,7 +40,6 @@ class SentenceCaseSniff implements Sniff {
 		'WordPress',
 		'PHP',
 		'API',
-		'REST',
 		'HTTP',
 		'HTTPS',
 		'URL',
@@ -51,7 +50,6 @@ class SentenceCaseSniff implements Sniff {
 		'XML',
 		'SQL',
 		'MySQL',
-		'I',
 		// Days
 		'Monday',
 		'Tuesday',
@@ -122,7 +120,6 @@ class SentenceCaseSniff implements Sniff {
 		'Trello',
 		'Twilio',
 		'WhatsApp',
-		'X',
 		'Twitter',
 		'Zoho',
 		'Zoho Campaigns',
@@ -298,6 +295,11 @@ class SentenceCaseSniff implements Sniff {
 			return array();
 		}
 
+		// Skip strings with file extensions
+		if ( preg_match( '/\.\w+\b/i', $string ) ) {
+			return array();
+		}
+
 		// Extract full words with word boundaries
 		preg_match_all( '/\b([a-zA-Z0-9]+)\b/', $string, $matches );
 		$words = $matches[1];
@@ -321,6 +323,11 @@ class SentenceCaseSniff implements Sniff {
 					// Skip HTML tags
 					if ( preg_match( '/<' . preg_quote( $word, '/' ) . '>/i', $string ) ||
 						 preg_match( '/<\/' . preg_quote( $word, '/' ) . '>/i', $string ) ) {
+						continue;
+					}
+
+					// Skip file extensions
+					if ( preg_match( '/\.' . preg_quote( $word, '/' ) . '\b/i', $string ) ) {
 						continue;
 					}
 
