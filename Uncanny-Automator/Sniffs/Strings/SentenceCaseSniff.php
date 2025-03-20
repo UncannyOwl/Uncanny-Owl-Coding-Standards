@@ -256,10 +256,10 @@ class SentenceCaseSniff implements Sniff {
 			}
 		}
 
-		// Process warning-only corrections (no auto-fix)
+		// Process warnings (no auto-fix)
 		if ( ! empty( $warnings ) ) {
 			$warning_msg = sprintf(
-				'These words might need case correction (review manually): %s',
+				'These words might need case correction (review manually): %s | Full string: "%s"',
 				implode(
 					', ',
 					array_map(
@@ -269,7 +269,8 @@ class SentenceCaseSniff implements Sniff {
 						array_keys( $warnings ),
 						$warnings
 					)
-				)
+				),
+				$string
 			);
 
 			$phpcs_file->addWarning(

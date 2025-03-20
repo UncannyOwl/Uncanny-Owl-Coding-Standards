@@ -30,7 +30,7 @@ if (!file_exists($phpcs)) {
 }
 
 $cmd = sprintf(
-    '%s --standard=%s --colors --report=full --report-width=120 %s',
+    '%s --standard=%s --colors --report=full --report-width=120 --warning-severity=1 %s',
     escapeshellarg($phpcs),
     escapeshellarg($standard),
     implode(' ', array_map('escapeshellarg', array_slice($argv, 1)))
