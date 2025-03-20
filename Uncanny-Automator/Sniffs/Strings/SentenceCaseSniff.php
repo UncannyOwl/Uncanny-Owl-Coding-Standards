@@ -40,10 +40,8 @@ class SentenceCaseSniff implements Sniff {
 		'WordPress',
 		'PHP',
 		'API',
-		'REST',
 		'HTTP',
 		'HTTPS',
-		'ID',
 		'URL',
 		'HTML',
 		'CSS',
@@ -52,7 +50,6 @@ class SentenceCaseSniff implements Sniff {
 		'XML',
 		'SQL',
 		'MySQL',
-		'I',
 		// Days
 		'Monday',
 		'Tuesday',
@@ -66,7 +63,6 @@ class SentenceCaseSniff implements Sniff {
 		'February',
 		'March',
 		'April',
-		'May',
 		'June',
 		'July',
 		'August',
@@ -124,13 +120,26 @@ class SentenceCaseSniff implements Sniff {
 		'Trello',
 		'Twilio',
 		'WhatsApp',
-		'X',
 		'Twitter',
 		'Zoho',
 		'Zoho Campaigns',
 		'Zoom',
 		'Zoom Meetings',
 		'Zoom Webinars',
+	);
+
+	/**
+	 * Words that might be problematic for auto-fixing - these will generate warnings instead.
+	 * These words are common English words or have multiple meanings.
+	 *
+	 * @var array
+	 */
+	private $cautious_reserved = array(
+		'REST',    // Could be "REST API" or regular word "rest"
+		'I',       // Personal pronoun but too common for auto-fixing
+		'X',       // Brand name but also common letter/variable
+		'May',     // Month name but also common modal verb
+		'ID',      // Technical term but often part of words like "valid"
 	);
 
 	/**
@@ -188,9 +197,16 @@ class SentenceCaseSniff implements Sniff {
 
 		// Get the string content without quotes
 		$string = trim( $token['content'], "\"'" );
+		// Preserve the original quote style
+		$original_quotes = substr( $token['content'], 0, 1 );
 
 		// Skip empty strings
 		if ( empty( $string ) ) {
+			return;
+		}
+
+		// Skip URLs, formats, and code-like strings
+		if ( $this->should_skip_string( $string ) ) {
 			return;
 		}
 
@@ -205,9 +221,11 @@ class SentenceCaseSniff implements Sniff {
 			return;
 		}
 
-		// Find all words that need case correction
+		// Find words that need case correction - separate auto-fix from warnings
 		$corrections = $this->find_case_corrections( $string );
+		$warnings = $this->find_cautious_corrections( $string );
 
+		// Process auto-fix corrections
 		if ( ! empty( $corrections ) ) {
 			$error_msg = sprintf(
 				'Reserved words have incorrect case: %s',
@@ -233,46 +251,193 @@ class SentenceCaseSniff implements Sniff {
 				$fixed_string = $this->apply_corrections( $string, $corrections );
 				$phpcs_file->fixer->replaceToken(
 					$stack_ptr,
-					sprintf( '"%s"', $fixed_string )
+					sprintf( '%s%s%s', $original_quotes, $fixed_string, $original_quotes )
 				);
 			}
 		}
+
+		// Process warnings (no auto-fix)
+		if ( ! empty( $warnings ) ) {
+			$warning_msg = sprintf(
+				'These words might need case correction (review manually): %s | Full string: "%s"',
+				implode(
+					', ',
+					array_map(
+						function ( $word, $correct ) {
+							return sprintf( '"%s" could be "%s"', $word, $correct );
+						},
+						array_keys( $warnings ),
+						$warnings
+					)
+				),
+				$string
+			);
+
+			$phpcs_file->addWarning(
+				$warning_msg,
+				$stack_ptr,
+				'PotentialCaseIssue'
+			);
+		}
+	}
+
+	/**
+	 * Determine if a string should be skipped for case checking.
+	 *
+	 * @param string $string The string to check.
+	 * @return bool True if the string should be skipped.
+	 */
+	private function should_skip_string( $string ) {
+		// Skip URLs
+		if ( preg_match( '~^https?://~i', $string ) ||
+			strpos( $string, '.com' ) !== false ||
+			strpos( $string, '.org' ) !== false ||
+			strpos( $string, '.net' ) !== false ||
+			strpos( $string, '.edu' ) !== false ) {
+			return true;
+		}
+
+		// Skip date and time format strings (common formats)
+		if ( preg_match( '/^[YyFmMdjlDwWNztsLco\s,@\-:.\/]+$/i', $string ) ) {
+			return true;
+		}
+
+		// Skip strings that appear to be time format-related
+		if ( preg_match( '/[HhGg]:[im]/i', $string ) ) {
+			return true;
+		}
+
+		// Skip strings that appear to be code or constants
+		if ( preg_match( '/^[A-Z_][A-Z0-9_]+$/i', $string ) ||
+			preg_match( '/\w+_\w+/', $string ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
 	 * Find words that need case correction in a string.
 	 *
 	 * @param string $string The string to check.
-	 * @return array Array of incorrect => correct case pairs.
+	 * @return array Array of incorrect => correct case pairs for auto-fixing.
 	 */
 	private function find_case_corrections( $string ) {
 		$corrections = array();
-		$words = str_word_count( $string, 1 );
 
-		// Check for URLs and add them to corrections if not lowercase
-		if ( preg_match_all( '/(https?:\/\/[^\s]+)/i', $string, $matches ) ) {
-			foreach ( $matches[0] as $url ) {
-				$lowercase_url = strtolower( $url );
-				if ( $url !== $lowercase_url ) {
-					$corrections[ $url ] = $lowercase_url;
-				}
-			}
-			// Skip checking other words if URL is found
-			return $corrections;
+		// Skip HTML content entirely
+		if ( preg_match( '/<\/?[a-z][^>]*>/i', $string ) ) {
+			return array();
 		}
 
+		// Skip URLs
+		if ( preg_match( '/https?:\/\//i', $string ) ) {
+			return array();
+		}
+
+		// Skip strings with file extensions
+		if ( preg_match( '/\.\w+\b/i', $string ) ) {
+			return array();
+		}
+
+		// Extract full words with word boundaries
+		preg_match_all( '/\b([a-zA-Z0-9]+)\b/', $string, $matches );
+		$words = $matches[1];
+
 		foreach ( $words as $word ) {
-			// Check core reserved words
+			// Skip non-alphabetic words or single characters
+			if ( ! ctype_alpha( $word ) || strlen( $word ) === 1 ) {
+				continue;
+			}
+
+			// Check against core reserved words - exact matches only
 			foreach ( $this->core_reserved as $reserved ) {
+				// Only check if it's an exact case-insensitive match for the whole word
 				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
+					// Skip protocol parts of URLs
+					if ( in_array( $reserved, array( 'HTTP', 'HTTPS' ), true ) && 
+						 preg_match( '/\b' . preg_quote( $word, '/' ) . ':\/\//i', $string ) ) {
+						continue;
+					}
+
+					// Skip HTML tags
+					if ( preg_match( '/<' . preg_quote( $word, '/' ) . '>/i', $string ) ||
+						 preg_match( '/<\/' . preg_quote( $word, '/' ) . '>/i', $string ) ) {
+						continue;
+					}
+
+					// Skip file extensions
+					if ( preg_match( '/\.' . preg_quote( $word, '/' ) . '\b/i', $string ) ) {
+						continue;
+					}
+					
+					// Only make the correction if it's a standalone whole word
 					$corrections[ $word ] = $reserved;
+					break;
 				}
 			}
 
-			// Check project reserved words
-			foreach ( $this->project_reserved as $reserved ) {
+			// Check project reserved words - exact matches only
+			if ( ! isset( $corrections[ $word ] ) ) {
+				foreach ( $this->project_reserved as $reserved ) {
+					if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
+						$corrections[ $word ] = $reserved;
+						break;
+					}
+				}
+			}
+		}
+
+		return $corrections;
+	}
+
+	/**
+	 * Find words that might need case correction but shouldn't be auto-fixed.
+	 *
+	 * @param string $string The string to check.
+	 * @return array Array of incorrect => correct case pairs for warnings only.
+	 */
+	private function find_cautious_corrections( $string ) {
+		$corrections = array();
+
+		// Skip HTML content, URLs, and file extensions
+		if ( preg_match( '/<\/?[a-z][^>]*>/i', $string ) || 
+			 preg_match( '/https?:\/\//i', $string ) ||
+			 preg_match( '/\.\w+\b/i', $string ) ) {
+			return array();
+		}
+
+		// Extract full words with word boundaries
+		preg_match_all( '/\b([a-zA-Z0-9]+)\b/', $string, $matches );
+		$words = $matches[1];
+
+		foreach ( $words as $word ) {
+			// Skip non-alphabetic words
+			if ( ! ctype_alpha( $word ) ) {
+				continue;
+			}
+
+			// Check against cautious reserved words - exact matches only
+			foreach ( $this->cautious_reserved as $reserved ) {
 				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
+					// For 'ID', only match standalone 'id', not parts of words
+					if ( $reserved === 'ID' && !preg_match( '/\bid\b/i', $string ) ) {
+						continue;
+					}
+					
+					// Skip protocol parts of URLs
+					if ( in_array( $reserved, array( 'HTTP', 'HTTPS' ), true ) && 
+						 preg_match( '/\b' . preg_quote( $word, '/' ) . ':\/\//i', $string ) ) {
+						continue;
+					}
+					
+					// Skip file extensions
+					if ( preg_match( '/\.' . preg_quote( $word, '/' ) . '\b/i', $string ) ) {
+						continue;
+					}
+					
 					$corrections[ $word ] = $reserved;
+					break;
 				}
 			}
 		}
@@ -290,7 +455,8 @@ class SentenceCaseSniff implements Sniff {
 	private function apply_corrections( $string, $corrections ) {
 		$result = $string;
 		foreach ( $corrections as $incorrect => $correct ) {
-			$result = str_ireplace( $incorrect, $correct, $result );
+			// Use word boundary in replacement to avoid changing parts of words
+			$result = preg_replace( '/\b' . preg_quote( $incorrect, '/' ) . '\b/i', $correct, $result );
 		}
 		return $result;
 	}

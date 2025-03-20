@@ -41,6 +41,12 @@
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
         <exclude name="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+        <exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+        <exclude name="Universal.CodeAnalysis.NoEchoSprintf"/>
+        <exclude name="Squiz.Strings.DoubleQuoteUsage"/>
+        <exclude name="Generic.Strings.UnnecessaryStringConcat"/>
+        <!-- Exclude WordPress string handling to prevent conflicts -->
+        <exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
     </rule>
 
     <!-- Include custom PHP compatibility sniffs -->
@@ -133,5 +139,11 @@
     <rule ref="./Sniffs/Strings/SentenceCaseSniff.php"/>
     <rule ref="./Sniffs/Strings/TranslatorCommentSniff.php"/>
     <rule ref="./Sniffs/Strings/StringQuotingSniff.php"/>
+    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php"/>
     <rule ref="./Sniffs/WhiteSpace/SuperfluousWhitespaceSniff.php"/>
+
+    <!-- Configure severity for HTML in translations -->
+    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php">
+        <severity>5</severity>
+    </rule>
 </ruleset>

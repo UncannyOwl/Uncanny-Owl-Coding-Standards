@@ -35,8 +35,6 @@ class TranslationFunctionSniff implements Sniff {
 	private $unescaped_functions = array(
 		'__',
 		'_e',
-		'_x',
-		'_ex',
 	);
 
 	/**
@@ -63,7 +61,7 @@ class TranslationFunctionSniff implements Sniff {
 		// Check for unescaped translation functions
 		if (in_array($function_name, $this->unescaped_functions, true)) {
 			$phpcs_file->addError(
-				'Translation function should use esc_html__ or esc_attr__ for proper escaping',
+				'Translation function should use esc_html__, esc_attr__, or _x for proper escaping and context',
 				$stack_ptr,
 				'UnescapedTranslation'
 			);
