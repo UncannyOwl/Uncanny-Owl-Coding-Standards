@@ -41,6 +41,8 @@
         <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
         <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
         <exclude name="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+        <exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+        <exclude name="Universal.CodeAnalysis.NoEchoSprintf"/>
     </rule>
 
     <!-- Include custom PHP compatibility sniffs -->

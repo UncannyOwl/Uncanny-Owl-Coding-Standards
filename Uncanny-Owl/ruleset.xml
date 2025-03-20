@@ -35,6 +35,8 @@
         <exclude name="Generic.Commenting"/>
         <exclude name="WordPress.Files.FileName"/>
         <exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
+        <exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+        <exclude name="Universal.CodeAnalysis.NoEchoSprintf"/>
     </rule>
 
     <!-- Basic array formatting -->

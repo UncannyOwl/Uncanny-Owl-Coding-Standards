@@ -86,6 +86,9 @@ class Test_Integration {
 		// translators: %1$s is the user's name, %2$s is their role
 		esc_html__( 'Welcome %1$s, you are logged in as %2$s', 'uncanny-automator' );
 
+		/* translators: %1$s is the user's name, %2$s is their role */
+		esc_html__( 'Welcome %1$s, you are logged in as %2$s', 'uncanny-automator' );
+
 		// This should pass - no placeholders, no translator comment needed
 		esc_html__( 'Simple string without placeholders', 'uncanny-automator' );
 	}
