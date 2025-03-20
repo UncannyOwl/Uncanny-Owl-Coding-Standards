@@ -194,6 +194,15 @@ class SentenceCaseSniff implements Sniff {
 			return;
 		}
 
+		// Skip URLs
+		if (preg_match('~^https?://~i', $string) || 
+			strpos($string, '.com') !== false || 
+			strpos($string, '.org') !== false || 
+			strpos($string, '.net') !== false || 
+			strpos($string, '.edu') !== false) {
+			return;
+		}
+
 		// Check if this string is part of a translation function
 		$prev_token = $phpcs_file->findPrevious( T_STRING, $stack_ptr - 2, $stack_ptr - 5 );
 		if ( false === $prev_token ) {
@@ -240,6 +249,120 @@ class SentenceCaseSniff implements Sniff {
 	}
 
 	/**
+	 * Determine if 'may' is being used as a modal verb in the given context.
+	 *
+	 * @param string $string The string containing the word 'may'.
+	 * @param string $word   The actual word being checked.
+	 * @return bool True if it's a modal verb, false if it's likely the month name.
+	 */
+	private function is_modal_may($string, $word) {
+		if (strtolower($word) !== 'may') {
+			return false;
+		}
+		
+		$words = preg_split('/\s+/', strtolower($string));
+		$word_count = count($words);
+		
+		// Find the position of 'may' in the words array
+		$may_pos = -1;
+		foreach ($words as $i => $word_in_context) {
+			if (trim($word_in_context, '.,!?:;()[]{}') === 'may') {
+				$may_pos = $i;
+				break;
+			}
+		}
+		
+		if ($may_pos === -1) {
+			return false;
+		}
+		
+		// Check if it's the first word in the sentence
+		if ($may_pos === 0) {
+			// If it's first, check if followed by a pronoun or article
+			if ($word_count > 1) {
+				$next_word = $words[$may_pos + 1];
+				$pronouns = array('i', 'you', 'he', 'she', 'it', 'we', 'they');
+				return in_array($next_word, $pronouns, true);
+			}
+			return false;
+		}
+		
+		// Check words before 'may'
+		if ($may_pos > 0) {
+			$prev_word = $words[$may_pos - 1];
+			// Common subjects that precede modal verbs
+			$subjects = array(
+				'i', 'you', 'he', 'she', 'it', 'we', 'they',
+				'this', 'that', 'these', 'those',
+				'user', 'users', 'recipe', 'recipes', 'trigger', 'triggers',
+				'action', 'actions', 'integration', 'integrations',
+				'error', 'errors', 'warning', 'warnings',
+				'process', 'processes', 'system', 'systems',
+				'plugin', 'plugins', 'setting', 'settings',
+				'value', 'values', 'option', 'options',
+				'data', 'information',
+				'page', 'reloading', 'feature', 'features',
+				'which', 'what', 'who', 'when', 'where', 'how', 'why',
+			);
+			
+			if (in_array($prev_word, $subjects, true)) {
+				return true;
+			}
+			
+			// Check for determiners before potential subjects
+			$determiners = array('the', 'a', 'an', 'some', 'any', 'each', 'every', 'no', 'your', 'our', 'their', 'my', 'his', 'her', 'its');
+			if ($may_pos > 1 && in_array($prev_word, $determiners, true)) {
+				$two_words_before = $words[$may_pos - 2];
+				
+				// Allow common patterns with determiners
+				$noun_determiners = array('page', 'user', 'data', 'plugin', 'system', 'recipe', 'reloading', 'feature');
+				if (in_array($two_words_before, $noun_determiners, true)) {
+					return true;
+				}
+				
+				return !in_array($two_words_before, array('of', 'in', 'during', 'until', 'on', 'at', 'by', 'for'));
+			}
+		}
+		
+		// Check words after 'may'
+		if ($may_pos < $word_count - 1) {
+			$next_word = $words[$may_pos + 1];
+			// Common verbs that follow 'may'
+			$modal_following = array(
+				'be', 'have', 'need', 'want', 'take', 'get', 'become',
+				'appear', 'seem', 'look', 'sound', 'feel',
+				'cause', 'lead', 'result', 'vary', 'differ',
+				'include', 'contain', 'require', 'receive',
+				'work', 'function', 'operate', 'run', 'stop',
+				'start', 'begin', 'end', 'continue', 'remain',
+				'change', 'affect', 'impact', 'influence',
+				'not', 'also', 'still', 'already', 'now',
+				'fix', 'help', 'make', 'see', 'find', 'use', 'try',
+				'wish', 'like', 'prefer', 'show', 'do',
+			);
+			
+			if (in_array($next_word, $modal_following, true)) {
+				return true;
+			}
+		}
+		
+		// Likely modal contexts based on surrounding words
+		if (strpos($string, ' can ') !== false || strpos($string, ' will ') !== false || strpos($string, ' should ') !== false) {
+			return true; // Probably in a modal context if other modal verbs are present
+		}
+		
+		// Last resort: if "may" isn't at beginning of a sentence, it's likely modal
+		if ($may_pos > 0 && $may_pos < $word_count - 1) {
+			// Check if previous character is lowercase (suggesting mid-sentence)
+			if (preg_match('/\p{Ll}\s+may\b/ui', $string)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+
+	/**
 	 * Find words that need case correction in a string.
 	 *
 	 * @param string $string The string to check.
@@ -247,8 +370,11 @@ class SentenceCaseSniff implements Sniff {
 	 */
 	private function find_case_corrections( $string ) {
 		$corrections = array();
-		$words = str_word_count( $string, 1 );
-
+		
+		// Use a better word extraction approach that handles special characters properly
+		preg_match_all('/\b[a-zA-Z0-9\'_-]+\b/', $string, $matches);
+		$words = $matches[0];
+		
 		// Check for URLs and add them to corrections if not lowercase
 		if ( preg_match_all( '/(https?:\/\/[^\s]+)/i', $string, $matches ) ) {
 			foreach ( $matches[0] as $url ) {
@@ -260,7 +386,14 @@ class SentenceCaseSniff implements Sniff {
 			// Skip checking other words if URL is found
 			return $corrections;
 		}
-
+		
+		// Find all code sections (backticked content)
+		$code_sections = array();
+		preg_match_all('/`([^`]+)`/', $string, $code_matches);
+		if (!empty($code_matches[1])) {
+			$code_sections = $code_matches[1];
+		}
+		
 		// Skip checking specific strings that should maintain their original case
 		$skip_specific_strings = array(
 			'automator_send_email',
@@ -273,151 +406,104 @@ class SentenceCaseSniff implements Sniff {
 				return array();
 			}
 		}
-
-		// Check if string contains hook names (filter/action hooks)
-		$contains_hook = false;
-		$hook_patterns = array(
-			'/`[a-zA-Z0-9_]+`/', // Backticked terms
-			'/[`\'"]automator_[\w_]+[\'"]/', // Direct hook references
-			'/apply_filters\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/do_action\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/has_filter\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/add_filter\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/add_action\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/remove_filter\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
-			'/remove_action\s*\(\s*[\'"]automator_[\w_]+[\'"]/',
+		
+		// Extract all hook names, code blocks, and patterns to preserve
+		$protected_patterns = array(
+			// Hook patterns
+			'/[`\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/', // General hook pattern
+			'/[`\'"]automator_[\w_]+[\'"]/', // Automator hook references
+			'/apply_filters\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/do_action\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/has_filter\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/add_filter\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/add_action\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/remove_filter\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			'/remove_action\s*\(\s*[\'"]([a-zA-Z0-9_]+)_[\w_]+[\'"]/',
+			// Code patterns
+			'/`([^`]+)`/', // Backticked code
+			// File extensions
+			'/\.[a-zA-Z0-9]+\b/i', // Any file extension like .php, .json, etc.
+			// HTML tags
+			'/<\/?[a-zA-Z][^>]*>/' // HTML tags
 		);
-
-		// Extract all hook names and backticked terms
+		
+		// Extract all protected terms
 		$protected_terms = array();
-		foreach ($hook_patterns as $pattern) {
+		foreach ($protected_patterns as $pattern) {
 			if (preg_match_all($pattern, $string, $matches)) {
-				$contains_hook = true;
-				foreach ($matches[0] as $match) {
-					// Strip quotes and backticks
-					$term = trim($match, '`\'"');
+				foreach ($matches[0] as $i => $match) {
+					// Get the actual captured term if available
+					$term = isset($matches[1][$i]) ? $matches[1][$i] : $match;
+					// Strip quotes, brackets and backticks
+					$term = trim($term, '`\'"<>');
 					$protected_terms[] = $term;
-					// Also protect parts of hook names
+					
+					// For hook names, protect each part
 					if (strpos($term, '_') !== false) {
-						$protected_terms = array_merge($protected_terms, explode('_', $term));
+						$parts = explode('_', $term);
+						$protected_terms = array_merge($protected_terms, $parts);
 					}
 				}
 			}
 		}
-
-		// Normalize protected terms
-		$protected_terms = array_unique(array_map('trim', $protected_terms));
 		
-		// Intelligent modal verb detection for 'may'
-		$is_modal_may = function($string, $position) {
-			$words = explode(' ', strtolower($string));
-			$word_count = count($words);
-			
-			// Find the position of 'may' in the words array
-			$may_pos = -1;
-			foreach ($words as $i => $word) {
-				if (trim($word, '.,!?') === 'may') {
-					$may_pos = $i;
-					break;
-				}
-			}
-			
-			if ($may_pos === -1) {
-				return false;
-			}
-			
-			// Check if it's the first word in the sentence
-			if ($may_pos === 0) {
-				// If it's first, check if followed by a pronoun or article
-				if ($word_count > 1) {
-					$next_word = $words[$may_pos + 1];
-					$pronouns = array('i', 'you', 'he', 'she', 'it', 'we', 'they');
-					return in_array($next_word, $pronouns, true);
-				}
-				return false;
-			}
-			
-			// Check words before 'may'
-			if ($may_pos > 0) {
-				$prev_word = $words[$may_pos - 1];
-				// Common subjects that precede modal verbs
-				$subjects = array(
-					'i', 'you', 'he', 'she', 'it', 'we', 'they',
-					'this', 'that', 'these', 'those',
-					'user', 'users', 'recipe', 'recipes', 'trigger', 'triggers',
-					'action', 'actions', 'integration', 'integrations',
-					'error', 'errors', 'warning', 'warnings',
-					'process', 'processes', 'system', 'systems',
-					'plugin', 'plugins', 'setting', 'settings',
-					'value', 'values', 'option', 'options',
-					'data', 'information',
-					'page', 'reloading', // Added for "reloading the page may fix"
-				);
-				
-				if (in_array($prev_word, $subjects, true)) {
-					return true;
-				}
-				
-				// Check for determiners before potential subjects
-				$determiners = array('the', 'a', 'an', 'some', 'any', 'each', 'every');
-				if ($may_pos > 1 && in_array($prev_word, $determiners, true)) {
-					$two_words_before = $words[$may_pos - 2];
-					// Allow phrases like "reloading the page may fix"
-					if ($two_words_before === 'page' || $two_words_before === 'reloading') {
-						return true;
-					}
-					return !in_array($two_words_before, array('of', 'in', 'during', 'until'));
-				}
-			}
-			
-			// Check words after 'may'
-			if ($may_pos < $word_count - 1) {
-				$next_word = $words[$may_pos + 1];
-				// Common verbs that follow 'may'
-				$modal_following = array(
-					'be', 'have', 'need', 'want', 'take', 'get', 'become',
-					'appear', 'seem', 'look', 'sound', 'feel',
-					'cause', 'lead', 'result', 'vary', 'differ',
-					'include', 'contain', 'require', 'receive',
-					'work', 'function', 'operate', 'run', 'stop',
-					'start', 'begin', 'end', 'continue', 'remain',
-					'change', 'affect', 'impact', 'influence',
-					'not', 'also', 'still', 'already', 'now',
-					'fix', // Added for "may fix"
-				);
-				
-				if (in_array($next_word, $modal_following, true)) {
-					return true;
-				}
-			}
-			
-			// Special case: Check for "may fix" pattern specifically
-			if ($may_pos < $word_count - 1 && $words[$may_pos + 1] === 'fix') {
-				return true;
-			}
-			
-			return false;
-		};
+		// Explicitly protect the content of backticks
+		foreach ($code_sections as $code) {
+			$protected_terms[] = $code;
+			// Also add individual words from code
+			$code_words = preg_split('/\s+/', $code);
+			$protected_terms = array_merge($protected_terms, $code_words);
+		}
 		
-		// Find all file extensions in the string
+		// Find all file extensions
 		$file_extensions = array();
 		if (preg_match_all('/\.\w+\b/i', $string, $matches)) {
-			$file_extensions = array_map('strtolower', $matches[0]);
+			foreach ($matches[0] as $ext) {
+				$file_extensions[] = strtolower($ext);
+				// Also add the extension without the dot
+				$protected_terms[] = substr($ext, 1);
+			}
 		}
 		
-		foreach ( $words as $word ) {
-			// Skip words that are part of hook names or are backticked
-			if ($contains_hook) {
-				$word_lower = strtolower($word);
-				foreach ($protected_terms as $protected) {
-					if (strcasecmp($word, $protected) === 0) {
-						continue 2; // Skip to next word
-					}
-					// Also check if the word is part of a protected term
-					if (stripos($protected, $word_lower) !== false) {
-						continue 2; // Skip to next word
-					}
+		// Add all WordPress hook prefixes to protected terms
+		$hook_prefixes = array('wp', 'woocommerce', 'learndash', 'automator', 'uncanny');
+		$protected_terms = array_merge($protected_terms, $hook_prefixes);
+		
+		// Clean and normalize protected terms
+		$protected_terms = array_unique(array_map('trim', $protected_terms));
+		
+		// Process each word individually
+		foreach ($words as $word) {
+			$word_lower = strtolower($word);
+			
+			// Skip any word that's part of a protected term
+			foreach ($protected_terms as $protected) {
+				if (strcasecmp($word, $protected) === 0 || strcasecmp($protected, $word) === 0) {
+					continue 2; // Skip to next word
 				}
+				
+				// Also check if the word could be part of a protected term
+				$protected_lower = strtolower($protected);
+				if (strpos($protected_lower, $word_lower) === 0 || strpos($protected_lower, "_$word_lower") !== false) {
+					continue 2; // Skip to next word
+				}
+			}
+			
+			// Skip words in code sections
+			foreach ($code_sections as $code) {
+				if (stripos($code, $word) !== false) {
+					continue 2; // Skip to next word
+				}
+			}
+			
+			// Technical patterns that should maintain specific case
+			
+			// Special handling for version numbers (v1.0, etc.)
+			if (preg_match('/^v\d+(\.\d+)*$/i', $word)) {
+				if ($word !== strtolower($word)) {
+					$corrections[$word] = strtolower($word);
+				}
+				continue;
 			}
 			
 			// Special handling for multiplier notations (2x, 3x, 10x, etc.)
@@ -428,9 +514,23 @@ class SentenceCaseSniff implements Sniff {
 				continue;
 			}
 			
+			// Special handling for IDs and similar patterns
+			if (preg_match('/^(id|ids|url|urls)$/i', $word)) {
+				// Check against our reserved words to find correct case
+				foreach ($this->core_reserved as $reserved) {
+					if (strcasecmp($word, $reserved) === 0) {
+						if ($word !== $reserved) {
+							$corrections[$word] = $reserved;
+						}
+						continue 2;
+					}
+				}
+				continue;
+			}
+			
 			// Special handling for 'may' vs 'May'
 			if (strcasecmp($word, 'may') === 0) {
-				if ($is_modal_may($string, array_search($word, $words))) {
+				if ($this->is_modal_may($string, $word)) {
 					// In modal verb context, 'may' should remain lowercase
 					if ($word !== 'may') {
 						$corrections[$word] = 'may';
@@ -438,28 +538,17 @@ class SentenceCaseSniff implements Sniff {
 					continue;
 				}
 			}
-
-			// Check core reserved words
-			foreach ( $this->core_reserved as $reserved ) {
-				// Skip checking "automator" if the string contains hook names
-				if ( $contains_hook && strcasecmp( $reserved, 'Automator' ) === 0 && 
-					(strpos( strtolower( $word ), 'automator_' ) === 0 || strpos( $word, 'Automator_' ) === 0) ) {
+			
+			// Check against core reserved words
+			foreach ($this->core_reserved as $reserved) {
+				// Skip 'May' check if we're in a modal verb context
+				if ($reserved === 'May' && strcasecmp($word, 'may') === 0 && $this->is_modal_may($string, $word)) {
 					continue;
 				}
 				
-				// Skip 'May' check if we're in a modal verb context
-				if ($reserved === 'May' && strcasecmp($word, 'may') === 0 && $is_modal_may($string, array_search($word, $words))) {
-					continue;
-				}
-
 				// Skip case correction if the word is part of a file extension
 				$word_as_extension = '.' . strtolower($word);
 				if (in_array($word_as_extension, $file_extensions, true)) {
-					continue;
-				}
-
-				// Skip case correction if the word is within backticks
-				if ($contains_hook && preg_match('/`[^`]*' . preg_quote($word, '/') . '[^`]*`/', $string)) {
 					continue;
 				}
 				
@@ -468,25 +557,38 @@ class SentenceCaseSniff implements Sniff {
 					continue;
 				}
 				
-				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
-					$corrections[ $word ] = $reserved;
+				// Skip 'ID' check if it's part of another word
+				if ($reserved === 'ID') {
+					// ONLY match standalone 'id', never within another word like 'invalid'
+					if (!preg_match('/^id$/i', $word)) {
+						continue;
+					}
+				}
+				
+				// Check if word matches a reserved word (regardless of case)
+				if (strcasecmp($word, $reserved) === 0) {
+					// Word is a match but with wrong case
+					if ($word !== $reserved) {
+						$corrections[$word] = $reserved;
+					}
+					continue 2; // Continue to the next word
 				}
 			}
-
+			
 			// Check project reserved words
-			foreach ( $this->project_reserved as $reserved ) {
+			foreach ($this->project_reserved as $reserved) {
 				// Skip case correction if the word is part of a file extension
 				$word_as_extension = '.' . strtolower($word);
 				if (in_array($word_as_extension, $file_extensions, true)) {
 					continue;
 				}
-
-				if ( strcasecmp( $word, $reserved ) === 0 && $word !== $reserved ) {
-					$corrections[ $word ] = $reserved;
+				
+				if (strcasecmp($word, $reserved) === 0 && $word !== $reserved) {
+					$corrections[$word] = $reserved;
 				}
 			}
 		}
-
+		
 		return $corrections;
 	}
 

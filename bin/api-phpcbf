@@ -30,7 +30,7 @@ if (!file_exists($phpcbf)) {
 }
 
 $cmd = sprintf(
-    '%s --standard=%s -v %s',
+    '%s --standard=%s %s',
     escapeshellarg($phpcbf),
     escapeshellarg($standard),
     implode(' ', array_map('escapeshellarg', array_slice($argv, 1)))

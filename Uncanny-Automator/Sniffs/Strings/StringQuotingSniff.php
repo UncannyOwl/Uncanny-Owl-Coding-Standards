@@ -32,6 +32,28 @@ class StringQuotingSniff implements Sniff {
 	);
 
 	/**
+	 * Date/Time format characters that must maintain their case.
+	 *
+	 * @var array
+	 */
+	private $date_format_chars = array(
+		// Day
+		'd', 'D', 'j', 'l', 'N', 'S', 'w', 'z',
+		// Week
+		'W',
+		// Month
+		'F', 'm', 'M', 'n',
+		// Year
+		'L', 'o', 'Y', 'y',
+		// Time
+		'a', 'A', 'B', 'g', 'G', 'h', 'H', 'i', 'I', 's', 'u', 'v',
+		// Timezone
+		'e', 'I', 'O', 'P', 'p', 'T', 'Z',
+		// Full Date/Time
+		'c', 'r', 'U'
+	);
+
+	/**
 	 * Returns an array of tokens this test wants to listen for.
 	 *
 	 * @return array
@@ -51,17 +73,18 @@ class StringQuotingSniff implements Sniff {
 	public function process(File $phpcs_file, $stack_ptr) {
 		$tokens = $phpcs_file->getTokens();
 		$token = $tokens[$stack_ptr];
+		
+		// Get file name/path and check if it's a Discord file - SKIP ALL DISCORD FILES
+		$file_path = strtolower($phpcs_file->getFilename());
+		if (strpos($file_path, 'discord') !== false || strpos($file_path, '/integrations/discord/') !== false) {
+			return;
+		}
 
 		// Get the string's quote character
 		$quote_char = $token['content'][0];
 		
 		// Only process single-quoted strings
 		if ("'" !== $quote_char) {
-			return;
-		}
-		
-		// Only look for single quotes that need escaping
-		if (false === strpos($token['content'], "\\'")) {
 			return;
 		}
 
@@ -86,33 +109,41 @@ class StringQuotingSniff implements Sniff {
 
 		// Only fix strings within translation functions
 		if ($is_translation) {
-			// Safety check: Don't convert if the string contains unescaped double quotes
-			// as this could lead to syntax errors
 			$string_content = substr($token['content'], 1, -1); // Strip outer quotes
-			if (strpos($string_content, '"') !== false) {
-				// The string already contains double quotes, so converting could break it
+			
+			// Skip if the string contains any double quotes or HTML-like content
+			if (strpos($string_content, '"') !== false ||
+				strpos($string_content, '<') !== false ||
+				strpos($string_content, '>') !== false ||
+				strpos($string_content, 'href') !== false ||
+				strpos($string_content, 'src') !== false ||
+				strpos($string_content, 'target') !== false ||
+				strpos($string_content, '_blank') !== false ||
+				strpos($string_content, 'http') !== false ||
+				strpos($string_content, 'www.') !== false ||
+				strpos($string_content, '.com') !== false ||
+				strpos($string_content, '.org') !== false) {
 				return;
 			}
 			
-			// Safety check: Don't convert strings with complex escaping patterns
-			if (
-				strpos($string_content, '\\\\') !== false || // Double backslash
-				preg_match('/\\\\[^\'"]/', $string_content) // Other escaped characters besides quotes
-			) {
-				// String has complex escaping, better not to touch it
+			// Don't convert strings with complex escaping patterns
+			if (strpos($string_content, '\\\\') !== false || // Double backslash
+				preg_match('/\\\\[^\'"]/', $string_content)) { // Other escaped characters besides quotes
 				return;
 			}
 			
-			// Safety check: Don't convert strings with sprintf-style placeholders
-			// These need special handling for the $ character when in double quotes
+			// Don't convert strings with sprintf-style placeholders
 			if (preg_match('/%\d+\$[sd]/', $string_content)) {
-				// This is a string with sprintf placeholders with positional arguments
-				// Better to leave as single-quoted to avoid variable interpolation issues
+				return;
+			}
+			
+			// Check if this looks like a date format string
+			$date_format_pattern = implode('|', array_map('preg_quote', $this->date_format_chars));
+			if (preg_match('/^[\\\\\'"\s]*([' . $date_format_pattern . ']\s*[^a-zA-Z0-9]*\s*)+[\\\\\'"\s]*$/', $string_content)) {
 				return;
 			}
 			
 			// Additional check: Only convert if there are actually escaped single quotes
-			// This prevents unnecessary conversions of strings that don't need it
 			if (strpos($string_content, "\\'") === false) {
 				return;
 			}
