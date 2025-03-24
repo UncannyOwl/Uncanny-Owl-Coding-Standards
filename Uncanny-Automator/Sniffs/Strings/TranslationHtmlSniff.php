@@ -52,170 +52,108 @@ class TranslationHtmlSniff implements Sniff {
 	public function process(File $phpcs_file, $stack_ptr) {
 		$tokens = $phpcs_file->getTokens();
 		$token  = $tokens[$stack_ptr];
-
-		// First, determine if this string is part of a translation function
-		$in_translation_func = false;
-		$i = $stack_ptr;
-		$function_ptr = false;
+		$content = $token['content'];
 		
-		// Look backwards until we find a function name or something that would break the chain
-		while ($i > 0) {
-			// Skip whitespace and commas
-			if (in_array($tokens[$i]['code'], array(T_WHITESPACE, T_COMMA), true)) {
-				$i--;
-				continue;
-			}
-			
-			// If we find a function name, check if it's a translation function
-			if ($tokens[$i]['code'] === T_STRING) {
-				if (in_array($tokens[$i]['content'], $this->translation_functions, true)) {
-					$in_translation_func = true;
-					$function_ptr = $i;
-					break;
-				} else {
-					// Found some other function, we're not in a translation context
-					return;
-				}
-			}
-			
-			// Any other token type means we're not directly in a translation function
-			break;
-		}
+		// Check if this string is the first parameter to a translation function
+		$prev_non_whitespace = $phpcs_file->findPrevious(
+			T_WHITESPACE,
+			$stack_ptr - 1,
+			null,
+			true
+		);
 		
-		// If we're not in a translation function, no need to check
-		if (!$in_translation_func) {
+		// If previous token isn't an open parenthesis, this isn't the first parameter
+		if (false === $prev_non_whitespace || $tokens[$prev_non_whitespace]['code'] !== T_OPEN_PARENTHESIS) {
 			return;
 		}
-
-		// Now examine the string content for HTML
-		$string_content = substr($token['content'], 1, -1); // Strip outer quotes
 		
-		// Check if this translation string has placeholders
-		$has_placeholders = (bool) preg_match('/%(\d+\$)?[sdf]/', $string_content);
+		// Get the function name
+		$function_ptr = $phpcs_file->findPrevious(
+			T_WHITESPACE,
+			$prev_non_whitespace - 1,
+			null,
+			true
+		);
 		
-		// Now check if we're inside a formatting context (printf/sprintf)
-		$in_formatting_context = $this->check_formatting_context($phpcs_file, $stack_ptr);
-		
-		// If the string has placeholders AND we're in a formatting context, this is a valid use
-		if ($has_placeholders && $in_formatting_context) {
+		if (false === $function_ptr || $tokens[$function_ptr]['code'] !== T_STRING) {
 			return;
 		}
-
-		// Now check for HTML in the translation string
-		if (
-			// HTML tags
-			preg_match('/<[^>]*>/', $string_content) ||
-			// Common HTML attributes
-			strpos($string_content, 'href=') !== false ||
-			strpos($string_content, 'src=') !== false ||
-			strpos($string_content, 'target=') !== false ||
-			strpos($string_content, 'class=') !== false ||
-			strpos($string_content, 'id=') !== false ||
-			// Common HTML entities
-			strpos($string_content, '&nbsp;') !== false ||
-			strpos($string_content, '&quot;') !== false ||
-			strpos($string_content, '&lt;') !== false ||
-			strpos($string_content, '&gt;') !== false ||
-			strpos($string_content, '&amp;') !== false
-		) {
-			$error = 'HTML found in translation string. Use sprintf() with %%s placeholder instead. Example:' . PHP_EOL;
-			$error .= 'sprintf(' . PHP_EOL;
-			$error .= '    __(' . PHP_EOL;
-			$error .= '        \'Text with %s link\',' . PHP_EOL;
-			$error .= '        \'uncanny-automator\'' . PHP_EOL;
-			$error .= '    ),' . PHP_EOL;
-			$error .= '    \'<a href="url">link text</a>\'' . PHP_EOL;
-			$error .= ');';
-
-			$phpcs_file->addError(
-				$error,
-				$stack_ptr,
-				'HTMLInTranslation'
-			);
+		
+		$function_name = $tokens[$function_ptr]['content'];
+		
+		// If not a translation function, return early
+		if (!in_array($function_name, $this->translation_functions, true)) {
+			return;
+		}
+		
+		// We've confirmed this is a translation string - now check for HTML
+		$string_content = substr($content, 1, -1); // Remove quotes
+		
+		// Check if the string contains HTML. This regex will match any HTML tag like <tag>
+		if (preg_match('/<[^>]*>/', $string_content)) {
+			// Now check if we're in a formatting context with a placeholder
+			$has_placeholder = (bool) preg_match('/%(\d+\$)?[sdf]/', $string_content);
+			$in_formatting_context = $this->is_in_formatting_context($phpcs_file, $stack_ptr);
+			
+			// If we have HTML but either no placeholder or not in a formatting context, report error
+			if (!$has_placeholder || !$in_formatting_context) {
+				$error = 'HTML found in translation string. Use sprintf() with %%s placeholder instead. Example:' . PHP_EOL;
+				$error .= 'sprintf(' . PHP_EOL;
+				$error .= '    __(' . PHP_EOL;
+				$error .= '        \'Text with %s link\',' . PHP_EOL;
+				$error .= '        \'uncanny-automator\'' . PHP_EOL;
+				$error .= '    ),' . PHP_EOL;
+				$error .= '    \'<a href="url">link text</a>\'' . PHP_EOL;
+				$error .= ');';
+				
+				$phpcs_file->addError(
+					$error,
+					$stack_ptr,
+					'HTMLInTranslation'
+				);
+			}
 		}
 	}
-
+	
 	/**
-	 * Determine if a token is inside a formatting context (printf/sprintf)
+	 * Check if we're in a formatting context (sprintf/printf)
 	 *
-	 * @param File $phpcs_file The PHP_CodeSniffer file.
-	 * @param int  $stack_ptr  The position to check from.
-	 *
-	 * @return bool Whether the token is inside a formatting context
+	 * @param File $phpcs_file The PHP_CodeSniffer file
+	 * @param int  $stack_ptr  The position to check from
+	 * @return bool Whether we're in a formatting context
 	 */
-	private function check_formatting_context(File $phpcs_file, $stack_ptr) {
+	private function is_in_formatting_context(File $phpcs_file, $stack_ptr) {
 		$tokens = $phpcs_file->getTokens();
-		$filename = basename($phpcs_file->getFilename());
 		
-		// Get the full content of the file
-		$file_content = file_get_contents($phpcs_file->getFilename());
-		$relevant_lines = explode("\n", $file_content);
-		$token_line = $tokens[$stack_ptr]['line'];
+		// Find the statement this translation is a part of
+		$statement_start = 0;
+		for ($i = $stack_ptr; $i >= 0; $i--) {
+			if (in_array($tokens[$i]['code'], array(T_SEMICOLON, T_OPEN_TAG), true)) {
+				$statement_start = $i + 1;
+				break;
+			}
+		}
 		
-		// Look back up to 5 lines to find 'echo sprintf' or similar patterns
-		for ($i = $token_line - 1; $i > max(0, $token_line - 5); $i--) {
-			if (isset($relevant_lines[$i - 1])) {
-				$line = trim($relevant_lines[$i - 1]);
-				if (strpos($line, 'echo sprintf') !== false || 
-				    strpos($line, 'printf') !== false ||
-				    strpos($line, 'sprintf') !== false) {
+		// Look for sprintf/printf at the beginning of the statement
+		$first_token = $phpcs_file->findNext(T_WHITESPACE, $statement_start, null, true);
+		if (false !== $first_token) {
+			// Direct sprintf/printf call
+			if ($tokens[$first_token]['code'] === T_STRING) {
+				$function = strtolower($tokens[$first_token]['content']);
+				if ($function === 'sprintf' || $function === 'printf') {
 					return true;
 				}
 			}
-		}
-		
-		// Start from the current token and look backwards
-		$i = $stack_ptr;
-		$open_parentheses = 0;
-		$max_lookback = 100; // Avoid infinite loops
-		$count = 0;
-		
-		while ($i > 0 && $count < $max_lookback) {
-			$count++;
 			
-			// If we hit a semicolon or open tag, we've gone too far back
-			if (in_array($tokens[$i]['code'], array(T_SEMICOLON, T_OPEN_TAG), true)) {
-				break;
-			}
-			
-			// Track parentheses depth
-			if ($tokens[$i]['code'] === T_OPEN_PARENTHESIS) {
-				$open_parentheses++;
-				
-				// If we're opening a new set of parentheses, check if it belongs to echo/printf/sprintf
-				$prev = $phpcs_file->findPrevious(array(T_WHITESPACE), $i - 1, null, true);
-				if (false !== $prev) {
-					if ($tokens[$prev]['code'] === T_STRING) {
-						$function_name = strtolower($tokens[$prev]['content']);
-						if ($function_name === 'sprintf' || $function_name === 'printf') {
-							return true;
-						}
-					} elseif ($tokens[$prev]['code'] === T_ECHO) {
-						// This is an echo statement - need to check if there's a sprintf inside
-						$next = $phpcs_file->findNext(array(T_WHITESPACE), $i + 1, null, true);
-						if (false !== $next && 
-							$tokens[$next]['code'] === T_STRING && 
-							strtolower($tokens[$next]['content']) === 'sprintf') {
-							return true;
-						}
-					}
-				}
-			} elseif ($tokens[$i]['code'] === T_CLOSE_PARENTHESIS) {
-				$open_parentheses--;
-			}
-			
-			// Special handling for different formatting patterns
-			if ($tokens[$i]['code'] === T_ECHO) {
-				// Look ahead for sprintf
-				$next = $phpcs_file->findNext(array(T_WHITESPACE), $i + 1, null, true);
+			// Echo sprintf pattern
+			if ($tokens[$first_token]['code'] === T_ECHO) {
+				$next = $phpcs_file->findNext(T_WHITESPACE, $first_token + 1, null, true);
 				if (false !== $next && 
 					$tokens[$next]['code'] === T_STRING && 
 					strtolower($tokens[$next]['content']) === 'sprintf') {
 					return true;
 				}
 			}
-			
-			$i--;
 		}
 		
 		return false;
