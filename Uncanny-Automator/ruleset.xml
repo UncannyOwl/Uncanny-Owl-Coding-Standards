@@ -117,9 +117,9 @@
 
     <rule ref="Generic.Formatting.MultipleStatementAlignment">
         <properties>
-            <property name="alignAtEnd" value="false"/>
-            <property name="maxPadding" value="100"/>
-            <property name="error" value="false"/>
+            <property name="alignAtEnd" value="true"/>
+            <property name="maxPadding" value="50"/>
+            <property name="error" value="true"/>
         </properties>
     </rule>
 
