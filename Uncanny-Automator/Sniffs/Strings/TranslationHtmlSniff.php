@@ -89,13 +89,28 @@ class TranslationHtmlSniff implements Sniff {
 		// We've confirmed this is a translation string - now check for HTML
 		$string_content = substr($content, 1, -1); // Remove quotes
 		
-		// Check if the string contains HTML. This regex will match any HTML tag like <tag>
+		// First, check if we're in a formatting context with a placeholder
+		$has_placeholder = (bool) preg_match('/%(\d+\$)?[sdf]/', $string_content);
+		$in_formatting_context = $this->is_in_formatting_context($phpcs_file, $stack_ptr);
+		
+		// Then check if the string contains HTML tags
 		if (preg_match('/<[^>]*>/', $string_content)) {
-			// Now check if we're in a formatting context with a placeholder
-			$has_placeholder = (bool) preg_match('/%(\d+\$)?[sdf]/', $string_content);
-			$in_formatting_context = $this->is_in_formatting_context($phpcs_file, $stack_ptr);
+			// If the string has a placeholder and we're in a formatting context, we'll check for balanced tags
+			if ($has_placeholder && $in_formatting_context) {
+				// Get the second parameter to the current function (which should be the placeholder value)
+				$next_param = $this->get_next_parameter($phpcs_file, $stack_ptr);
+				
+				// If the placeholder contains a closing tag for an opening tag in the translation
+				// string, then this is an edge case we might allow
+				if ($next_param && $this->is_closing_tag_for_opening_in_string($string_content, $next_param)) {
+					// This is a balanced case where the opening tag is in the translation 
+					// and the closing tag is passed as parameter - we'll let it pass
+					return;
+				}
+			}
 			
-			// If we have HTML but either no placeholder or not in a formatting context, report error
+			// If we have HTML but either no placeholder, not in a formatting context, 
+			// or the HTML tags aren't properly balanced by parameters, report error
 			if (!$has_placeholder || !$in_formatting_context) {
 				$error = 'HTML found in translation string. Use sprintf() with %%s placeholder instead. Example:' . PHP_EOL;
 				$error .= 'sprintf(' . PHP_EOL;
@@ -152,6 +167,67 @@ class TranslationHtmlSniff implements Sniff {
 					$tokens[$next]['code'] === T_STRING && 
 					strtolower($tokens[$next]['content']) === 'sprintf') {
 					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Get the next parameter for the current function call (after the current string)
+	 *
+	 * @param File $phpcs_file The PHP_CodeSniffer file
+	 * @param int  $stack_ptr  The position of the current parameter
+	 * @return string|false The next parameter value or false if not found
+	 */
+	private function get_next_parameter(File $phpcs_file, $stack_ptr) {
+		$tokens = $phpcs_file->getTokens();
+		
+		// Look for the next comma after the current parameter
+		$next_comma = $phpcs_file->findNext(T_COMMA, $stack_ptr + 1);
+		if (false === $next_comma) {
+			return false;
+		}
+		
+		// Look for the next parameter after the comma
+		$next_param = $phpcs_file->findNext(
+			array(T_WHITESPACE, T_COMMENT, T_DOC_COMMENT), 
+			$next_comma + 1, 
+			null, 
+			true
+		);
+		
+		if (false === $next_param || $tokens[$next_param]['code'] !== T_CONSTANT_ENCAPSED_STRING) {
+			return false;
+		}
+		
+		// Return the parameter value without quotes
+		return substr($tokens[$next_param]['content'], 1, -1);
+	}
+	
+	/**
+	 * Check if a string parameter contains a closing tag for an opening tag in the translation string
+	 *
+	 * @param string $translation_string The translation string
+	 * @param string $parameter The parameter value
+	 * @return bool Whether the parameter contains a closing tag for an opening tag in the translation
+	 */
+	private function is_closing_tag_for_opening_in_string($translation_string, $parameter) {
+		// Extract all opening tags from the translation string
+		preg_match_all('/<([a-z0-9]+)[^>]*>/i', $translation_string, $opening_matches);
+		
+		// Extract all closing tags from the parameter
+		preg_match_all('/<\/([a-z0-9]+)>/i', $parameter, $closing_matches);
+		
+		// If we have both opening and closing tags
+		if (!empty($opening_matches[1]) && !empty($closing_matches[1])) {
+			// Check if any closing tag in the parameter matches an opening tag in the translation
+			foreach ($opening_matches[1] as $opening_tag) {
+				foreach ($closing_matches[1] as $closing_tag) {
+					if (strtolower($opening_tag) === strtolower($closing_tag)) {
+						return true;
+					}
 				}
 			}
 		}
