@@ -151,6 +151,11 @@ class AutoContextTranslationSniff implements Sniff {
 			return true;
 		}
 
+		// If it's a _x function, it needs to be converted to esc_html_x
+		if ( preg_match( '/_x\(/', $function_call ) ) {
+			return false;
+		}
+
 		// For other functions, check if they have 3 parameters (text, domain, context)
 		$comma_count = substr_count( $function_call, ',' );
 		return $comma_count >= 2;
