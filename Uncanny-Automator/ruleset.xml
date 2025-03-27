@@ -147,7 +147,6 @@
         <exclude name="Generic.Strings.UnnecessaryStringConcat"/>
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.Found"/>
         <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed"/>
-        <exclude name="SlevomatCodingStandard.Functions.UnusedParameter"/>
         <!-- Exclude WordPress string handling to prevent conflicts -->
         <exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
     </rule>
