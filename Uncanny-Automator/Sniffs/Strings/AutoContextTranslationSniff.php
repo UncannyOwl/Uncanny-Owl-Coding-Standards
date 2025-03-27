@@ -42,6 +42,18 @@ class AutoContextTranslationSniff implements Sniff {
 	);
 
 	/**
+	 * Array keys where __() should be converted to esc_html_x().
+	 *
+	 * @var array
+	 */
+	private $html_exception_keys = array(
+		'tokenName',
+		'label',
+		'description',
+		'message',
+	);
+
+	/**
 	 * Returns an array of tokens this test wants to listen for.
 	 *
 	 * @return array
@@ -77,13 +89,22 @@ class AutoContextTranslationSniff implements Sniff {
 			return;
 		}
 
+		// Check if we've already reported this line
+		$line = $token['line'];
+		if ( isset( $this->reported_lines[ $line ] ) ) {
+			return;
+		}
+
 		// Check if context is provided
 		if ( ! $this->has_context( $function_call ) ) {
+			// Check if this is in an exception case
+			$is_exception = $this->is_html_exception( $phpcs_file, $stack_ptr );
+			
 			// Handle escaped functions differently
-			if ( in_array( $token['content'], $this->escaped_functions, true ) ) {
+			if ( in_array( $token['content'], $this->escaped_functions, true ) || $is_exception ) {
 				$error = 'Use %s with context instead of %s in integration strings. This helps translators better understand the context of the string.';
 				$data = array(
-					$this->get_context_function( $token['content'] ),
+					$is_exception ? 'esc_html_x' : $this->get_context_function( $token['content'] ),
 					$token['content'],
 				);
 
@@ -103,6 +124,9 @@ class AutoContextTranslationSniff implements Sniff {
 
 				$phpcs_file->addError( $error, $stack_ptr, 'MissingContext', $data );
 			}
+
+			// Mark this line as reported
+			$this->reported_lines[ $line ] = true;
 		}
 	}
 
@@ -239,7 +263,8 @@ class AutoContextTranslationSniff implements Sniff {
 		}
 		
 		// Add the new parameters in correct order: text, context, domain
-		$new_params = $params[0] . ', ' . $integration_name . ', ' . $params[1];
+		// Keep the original domain (last parameter)
+		$new_params = $params[0] . ', ' . $integration_name . ', ' . end( $params );
 		$phpcs_file->fixer->addContent( $open_paren, $new_params );
 		
 		$phpcs_file->fixer->endChangeset();
@@ -263,5 +288,38 @@ class AutoContextTranslationSniff implements Sniff {
 		}
 
 		return "'General'";
+	}
+
+	/**
+	 * Check if the function is in an exception case where it should be converted to esc_html_x.
+	 *
+	 * @param File $phpcs_file The PHP_CodeSniffer file where the token was found.
+	 * @param int  $stack_ptr  The position in the PHP_CodeSniffer file's token stack where the token was found.
+	 * @return bool True if this is an exception case.
+	 */
+	private function is_html_exception( File $phpcs_file, $stack_ptr ) {
+		$tokens = $phpcs_file->getTokens();
+		
+		// Look back for array keys
+		$current = $stack_ptr;
+		while ( $current > 0 ) {
+			$token = $tokens[ $current ];
+			
+			if ( T_CONSTANT_ENCAPSED_STRING === $token['code'] ) {
+				$key = trim( $token['content'], "'\"" );
+				if ( in_array( $key, $this->html_exception_keys, true ) ) {
+					return true;
+				}
+			}
+			
+			// Stop if we hit a comma or array bracket
+			if ( T_COMMA === $token['code'] || T_ARRAY === $token['code'] ) {
+				break;
+			}
+			
+			$current--;
+		}
+		
+		return false;
 	}
 } 
