@@ -91,6 +91,7 @@ class SentenceCaseSniff implements Sniff {
 		'Facebook',
 		'Facebook Groups',
 		'Facebook Pages',
+		'Facebook Lead Ads',
 		'GetResponse',
 		'Google',
 		'Google Calendar',
