@@ -24,7 +24,7 @@
     <arg name="report-width" value="120"/>
 
     <ini name="memory_limit" value="512M"/>
-
+    
     <!-- Check code for cross-version PHP compatibility. -->
     <config name="minimum_supported_wp_version" value="5.6-"/>
     <config name="testVersion" value="7.3"/>
@@ -34,20 +34,6 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>*/tests/*</exclude-pattern>
     <exclude-pattern>*.min.js</exclude-pattern>
-
-    <!-- Include the WordPress-Extra standard -->
-    <rule ref="WordPress-Extra">
-        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
-        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
-        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
-        <exclude name="Squiz.WhiteSpace.SuperfluousWhitespace"/>
-        <exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
-        <exclude name="Universal.CodeAnalysis.NoEchoSprintf"/>
-        <exclude name="Squiz.Strings.DoubleQuoteUsage"/>
-        <exclude name="Generic.Strings.UnnecessaryStringConcat"/>
-        <!-- Exclude WordPress string handling to prevent conflicts -->
-        <exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
-    </rule>
 
     <!-- Include custom PHP compatibility sniffs -->
     <rule ref="./Sniffs/PHP/DisallowArrowFunctionsSniff.php"/>
@@ -59,6 +45,7 @@
 
     <!-- Custom DocBlock Sniff -->
     <rule ref="./Sniffs/Commenting/FunctionDocBlockSniff.php"/>
+    <rule ref="./Sniffs/Commenting/ConstructorCommentSniff.php"/>
 
     <!-- Security Rules -->
     <rule ref="WordPress.Security"/>
@@ -123,6 +110,21 @@
         </properties>
     </rule>
 
+    <!-- Custom sniffs -->
+    <rule ref="./Sniffs/Strings/TextDomainSniff.php"/>
+    <rule ref="./Sniffs/Strings/TranslationFunctionSniff.php"/>
+    <rule ref="./Sniffs/Strings/SentenceCaseSniff.php"/>
+    <rule ref="./Sniffs/Strings/TranslatorCommentSniff.php"/>
+    <rule ref="./Sniffs/Strings/StringQuotingSniff.php"/>
+    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php"/>
+    <rule ref="./Sniffs/Strings/AutoContextTranslationSniff.php"/>
+    <rule ref="./Sniffs/WhiteSpace/SuperfluousWhitespaceSniff.php"/>
+
+    <!-- Configure severity for HTML in translations -->
+    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php">
+        <severity>5</severity>
+    </rule>
+
     <!-- Rules: WordPress Coding Standards - see https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards -->
     <rule ref="WordPress.WP.I18n">
         <properties>
@@ -133,17 +135,18 @@
         </properties>
     </rule>
 
-    <!-- Custom sniffs -->
-    <rule ref="./Sniffs/Strings/TextDomainSniff.php"/>
-    <rule ref="./Sniffs/Strings/TranslationFunctionSniff.php"/>
-    <rule ref="./Sniffs/Strings/SentenceCaseSniff.php"/>
-    <rule ref="./Sniffs/Strings/TranslatorCommentSniff.php"/>
-    <rule ref="./Sniffs/Strings/StringQuotingSniff.php"/>
-    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php"/>
-    <rule ref="./Sniffs/WhiteSpace/SuperfluousWhitespaceSniff.php"/>
-
-    <!-- Configure severity for HTML in translations -->
-    <rule ref="./Sniffs/Strings/TranslationHtmlSniff.php">
-        <severity>5</severity>
+    <!-- Include the WordPress-Extra standard last to ensure its rules take precedence -->
+    <rule ref="WordPress-Extra">
+        <exclude name="WordPress.WP.I18n.MissingTranslatorsComment"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="Squiz.WhiteSpace.SuperfluousWhitespace"/>
+        <exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+        <exclude name="Universal.CodeAnalysis.NoEchoSprintf"/>
+        <exclude name="Squiz.Strings.DoubleQuoteUsage"/>
+        <exclude name="Generic.Strings.UnnecessaryStringConcat"/>
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.Found"/>
+        <!-- Exclude WordPress string handling to prevent conflicts -->
+        <exclude name="WordPress.WP.I18n.NonSingularStringLiteralText"/>
     </rule>
 </ruleset>

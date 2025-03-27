@@ -14,7 +14,7 @@ use PHP_CodeSniffer\Files\File;
 class TranslationFunctionSniff implements Sniff {
 
 	/**
-	 * Non-context translation functions that should trigger a warning in integrations.
+	 * Non-context translation functions that should trigger an error in integrations.
 	 *
 	 * @var array
 	 */
@@ -72,8 +72,8 @@ class TranslationFunctionSniff implements Sniff {
 		if (false !== strpos($filename, '/src/integrations/')) {
 			if (in_array($function_name, $this->non_context_functions, true)) {
 				$context_alternative = $this->get_context_alternative($function_name);
-				$phpcs_file->addWarning(
-					'Use %s() with context instead of %s() in integration strings. This helps translators better understand the context of the string.',
+				$phpcs_file->addError(
+					'Use %s() with context instead of %s() in integration strings. This helps translators better understand the context of the string. Choose the appropriate escaping function (esc_html_x, esc_attr_x, etc.) based on the content type.',
 					$stack_ptr,
 					'NoContext',
 					array($context_alternative, $function_name)
