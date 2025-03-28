@@ -46,6 +46,7 @@
     <!-- Custom DocBlock Sniff -->
     <rule ref="./Sniffs/Commenting/FunctionDocBlockSniff.php"/>
     <rule ref="./Sniffs/Commenting/ConstructorCommentSniff.php"/>
+    <rule ref="./Sniffs/Commenting/FunctionCommentAutoFixSniff.php"/>
 
     <!-- Security Rules -->
     <rule ref="WordPress.Security"/>
