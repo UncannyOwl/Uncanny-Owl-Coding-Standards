@@ -11,7 +11,7 @@ class PHP74FeaturesSniff implements Sniff {
 	 *
 	 * @return array
 	 */
-	public function register() {
+	public function register(): array {
 		return array(
 			T_VARIABLE,      // For typed properties
 			T_COALESCE_EQUAL, // For ??=
@@ -27,7 +27,7 @@ class PHP74FeaturesSniff implements Sniff {
 	 *
 	 * @return void
 	 */
-	public function process( File $phpcs_file, $stack_ptr ) {
+	public function process( File $phpcs_file, $stack_ptr ): void {
 		$tokens = $phpcs_file->getTokens();
 		$token  = $tokens[ $stack_ptr ];
 
@@ -63,7 +63,7 @@ class PHP74FeaturesSniff implements Sniff {
 	 *
 	 * @return bool
 	 */
-	private function is_array_spread( File $phpcs_file, $stack_ptr ) {
+	private function is_array_spread( File $phpcs_file, $stack_ptr ): bool {
 		$tokens = $phpcs_file->getTokens();
 		$prev   = $phpcs_file->findPrevious( T_WHITESPACE, ( $stack_ptr - 1 ), null, true );
 
@@ -78,7 +78,7 @@ class PHP74FeaturesSniff implements Sniff {
 	 *
 	 * @return bool
 	 */
-	private function has_type_declaration( File $phpcs_file, $stack_ptr ) {
+	private function has_type_declaration( File $phpcs_file, $stack_ptr ): bool {
 		$tokens = $phpcs_file->getTokens();
 
 		// Look for class context
@@ -88,7 +88,7 @@ class PHP74FeaturesSniff implements Sniff {
 
 		// Check if we're inside a function
 		$function_ptr = $phpcs_file->findPrevious( T_FUNCTION, $stack_ptr );
-		if ( $function_ptr !== false ) {
+		if ( $function_ptr !== false && isset($tokens[$function_ptr])) {
 			// Check if the variable is within the function's parameters
 			if ( isset( $tokens[ $function_ptr ]['parenthesis_opener'] ) && 
 				isset( $tokens[ $function_ptr ]['parenthesis_closer'] ) ) {
@@ -108,7 +108,7 @@ class PHP74FeaturesSniff implements Sniff {
 			true
 		);
 
-		if ( $prev === false ) {
+		if ( $prev === false || !isset($tokens[$prev])) {
 			return false;
 		}
 
@@ -129,7 +129,7 @@ class PHP74FeaturesSniff implements Sniff {
 	 *
 	 * @return bool
 	 */
-	private function is_method_parameter( File $phpcs_file, $stack_ptr ) {
+	private function is_method_parameter( File $phpcs_file, $stack_ptr ): bool {
 		$tokens = $phpcs_file->getTokens();
 
 		// Find the previous non-whitespace token

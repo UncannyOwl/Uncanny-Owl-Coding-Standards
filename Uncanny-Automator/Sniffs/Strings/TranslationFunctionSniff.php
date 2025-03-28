@@ -42,7 +42,7 @@ class TranslationFunctionSniff implements Sniff {
 	 *
 	 * @return array
 	 */
-	public function register() {
+	public function register(): array {
 		return array(T_STRING);
 	}
 
@@ -54,7 +54,7 @@ class TranslationFunctionSniff implements Sniff {
 	 *
 	 * @return void
 	 */
-	public function process(File $phpcs_file, $stack_ptr) {
+	public function process(File $phpcs_file, $stack_ptr): void {
 		$tokens = $phpcs_file->getTokens();
 		$function_name = $tokens[$stack_ptr]['content'];
 
@@ -88,7 +88,7 @@ class TranslationFunctionSniff implements Sniff {
 	 * @param string $function The current function name.
 	 * @return string The recommended context function.
 	 */
-	private function get_context_alternative($function) {
+	private function get_context_alternative($function): string {
 		switch ($function) {
 			case '__':
 				return '_x';

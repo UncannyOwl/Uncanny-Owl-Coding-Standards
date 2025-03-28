@@ -19,7 +19,7 @@ class FunctionCommentAutoFixSniff implements Sniff {
 	 *
 	 * @return array
 	 */
-	public function register() {
+	public function register(): array {
 		return array( T_FUNCTION );
 	}
 
@@ -28,8 +28,9 @@ class FunctionCommentAutoFixSniff implements Sniff {
 	 *
 	 * @param File $phpcsFile The PHP_CodeSniffer file where the token was found.
 	 * @param int  $stackPtr  The position in the PHP_CodeSniffer file's token stack where the token was found.
+	 * @return void
 	 */
-	public function process( File $phpcsFile, $stackPtr ) {
+	public function process( File $phpcsFile, $stackPtr ): void {
 		$tokens = $phpcsFile->getTokens();
 		
 		// Skip anonymous functions or closures
@@ -172,7 +173,7 @@ class FunctionCommentAutoFixSniff implements Sniff {
 	 * @param int $stackPtr The position of the token.
 	 * @return string The indentation string.
 	 */
-	protected function getIndentation(File $phpcsFile, $stackPtr) {
+	protected function getIndentation(File $phpcsFile, $stackPtr): string {
 		$tokens = $phpcsFile->getTokens();
 		
 		// Find the first token on this line
@@ -202,7 +203,7 @@ class FunctionCommentAutoFixSniff implements Sniff {
 	 * @param string $indent The indentation to use.
 	 * @return string The formatted docblock.
 	 */
-	protected function generateDocBlock(File $phpcsFile, $stackPtr, $functionName, $indent) {
+	protected function generateDocBlock(File $phpcsFile, $stackPtr, $functionName, $indent): string {
 		$tokens = $phpcsFile->getTokens();
 		
 		// Format the function name for the description
@@ -247,7 +248,7 @@ class FunctionCommentAutoFixSniff implements Sniff {
 	 * @param string $functionName The function name.
 	 * @return string The formatted description.
 	 */
-	protected function formatFunctionName($functionName) {
+	protected function formatFunctionName($functionName): string {
 		// Convert snake_case to sentence case
 		$formatted = str_replace('_', ' ', $functionName);
 		$formatted = ucfirst($formatted);
@@ -278,6 +279,10 @@ class FunctionCommentAutoFixSniff implements Sniff {
 		
 		// Loop through each token between the parentheses
 		for ($i = $paramStart + 1; $i < $closer; $i++) {
+			if (!isset($tokens[$i])) {
+				continue;
+			}
+			
 			// Looking for variable names
 			if ($tokens[$i]['code'] === T_VARIABLE) {
 				$paramName = ltrim($tokens[$i]['content'], '$');
@@ -293,7 +298,7 @@ class FunctionCommentAutoFixSniff implements Sniff {
 						$i
 					);
 					
-					if ($typeToken !== false) {
+					if ($typeToken !== false && isset($tokens[$typeToken])) {
 						$typeHint = $tokens[$typeToken]['content'];
 					}
 				}

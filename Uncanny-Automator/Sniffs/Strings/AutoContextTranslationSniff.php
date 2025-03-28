@@ -29,6 +29,13 @@ class AutoContextTranslationSniff implements Sniff {
 	);
 
 	/**
+	 * Array to track reported lines to avoid duplicate reports.
+	 *
+	 * @var array
+	 */
+	private $reported_lines = array();
+
+	/**
 	 * Escaped translation functions that can be auto-fixed.
 	 *
 	 * @var array
@@ -52,6 +59,13 @@ class AutoContextTranslationSniff implements Sniff {
 		'description',
 		'message',
 	);
+
+	/**
+	 * Constructor to initialize properties.
+	 */
+	public function __construct() {
+		$this->reported_lines = array();
+	}
 
 	/**
 	 * Returns an array of tokens this test wants to listen for.
@@ -251,6 +265,11 @@ class AutoContextTranslationSniff implements Sniff {
 		$param = '';
 
 		while ( $current < $close_paren ) {
+			if (!isset($tokens[$current])) {
+				$current++;
+				continue;
+			}
+			
 			$token = $tokens[ $current ];
 			
 			if ( T_CONSTANT_ENCAPSED_STRING === $token['code'] ) {
@@ -274,7 +293,9 @@ class AutoContextTranslationSniff implements Sniff {
 		// Replace everything between parentheses
 		$current = $open_paren + 1;
 		while ( $current < $close_paren ) {
-			$phpcs_file->fixer->replaceToken( $current, '' );
+			if (isset($tokens[$current])) {
+				$phpcs_file->fixer->replaceToken( $current, '' );
+			}
 			$current++;
 		}
 		
@@ -322,8 +343,8 @@ class AutoContextTranslationSniff implements Sniff {
 			}
 		}
 		
-		// If we can't find the integration folder, return General
-		return "'General'";
+		// If we can't find the integration folder, return Automator
+		return "'Automator'";
 	}
 
 	/**
