@@ -77,9 +77,14 @@ class AutoContextTranslationSniff implements Sniff {
 			return;
 		}
 
-		// Check if this is in an integration file
+		// Get the file path and determine if this is in an integration file
 		$file_path = $phpcs_file->getFilename();
-		if ( strpos( $file_path, '/integrations/' ) === false ) {
+		$is_integration_file = $this->is_integration_file($file_path);
+
+		// For non-integration files:
+		// - Skip auto-fixing for escaped functions (esc_*__)
+		// - Still show error for non-escaped functions (__)
+		if (!$is_integration_file && strpos($token['content'], 'esc_') === 0) {
 			return;
 		}
 
@@ -100,8 +105,9 @@ class AutoContextTranslationSniff implements Sniff {
 			// Check if this is in an exception case
 			$is_exception = $this->is_html_exception( $phpcs_file, $stack_ptr );
 			
-			// Handle escaped functions differently
-			if ( in_array( $token['content'], $this->escaped_functions, true ) || $is_exception ) {
+			// For integration files, we can auto-fix escaped functions
+			// For non-integration files, we only show errors for non-escaped functions
+			if ( ($is_integration_file && in_array($token['content'], $this->escaped_functions, true)) || $is_exception ) {
 				$error = 'Use %s with context instead of %s in integration strings. This helps translators better understand the context of the string.';
 				$data = array(
 					$is_exception ? 'esc_html_x' : $this->get_context_function( $token['content'] ),
@@ -128,6 +134,20 @@ class AutoContextTranslationSniff implements Sniff {
 			// Mark this line as reported
 			$this->reported_lines[ $line ] = true;
 		}
+	}
+
+	/**
+	 * Check if the file is in an integrations directory.
+	 *
+	 * @param string $file_path The file path to check.
+	 * @return bool True if this is an integration file.
+	 */
+	private function is_integration_file($file_path) {
+		// Normalize path for consistent matching
+		$normalized_path = str_replace('\\', '/', $file_path);
+		
+		// Check if this is in an integrations folder
+		return preg_match('|/(?:src/)?integrations/([^/]+)/|', $normalized_path) === 1;
 	}
 
 	/**
@@ -170,12 +190,12 @@ class AutoContextTranslationSniff implements Sniff {
 	 * @return bool True if context is provided.
 	 */
 	private function has_context( $function_call ) {
-		// If the function already ends with _x, it has context
+		// If the function is already esc_*_x, it has context
 		if ( preg_match( '/esc_(?:html|attr)_x\(/', $function_call ) ) {
 			return true;
 		}
 
-		// If it's a _x function, it needs to be converted to esc_html_x
+		// For _x functions, we want to convert to esc_html_x but preserve context
 		if ( preg_match( '/_x\(/', $function_call ) ) {
 			return false;
 		}
@@ -225,10 +245,6 @@ class AutoContextTranslationSniff implements Sniff {
 			return;
 		}
 
-		// Get the integration name from the file path
-		$file_path = $phpcs_file->getFilename();
-		$integration_name = $this->get_integration_name( $file_path );
-
 		// Extract the original parameters
 		$params = array();
 		$current = $open_paren + 1;
@@ -262,9 +278,15 @@ class AutoContextTranslationSniff implements Sniff {
 			$current++;
 		}
 		
-		// Add the new parameters in correct order: text, context, domain
-		// Keep the original domain (last parameter)
-		$new_params = $params[0] . ', ' . $integration_name . ', ' . end( $params );
+		// For _x functions, preserve the original context
+		if ( $function_name === '_x' && count( $params ) >= 3 ) {
+			$new_params = $params[0] . ', ' . $params[1] . ', ' . $params[2];
+		} else {
+			// For other functions, use the integration name as context
+			$integration_name = $this->get_integration_name( $phpcs_file->getFilename() );
+			$new_params = $params[0] . ', ' . $integration_name . ', ' . end( $params );
+		}
+		
 		$phpcs_file->fixer->addContent( $open_paren, $new_params );
 		
 		$phpcs_file->fixer->endChangeset();
@@ -277,16 +299,30 @@ class AutoContextTranslationSniff implements Sniff {
 	 * @return string The integration name.
 	 */
 	private function get_integration_name( $file_path ) {
-		$path_parts = explode( '/', $file_path );
-		$integration_index = array_search( 'integrations', $path_parts );
+		// Normalize path for consistent matching
+		$normalized_path = str_replace('\\', '/', $file_path);
 		
-		if ( false !== $integration_index && isset( $path_parts[ $integration_index + 1 ] ) ) {
-			$integration = $path_parts[ $integration_index + 1 ];
-			// Remove dashes and capitalize each word
-			$integration = ucwords( str_replace( '-', ' ', $integration ) );
-			return "'" . $integration . "'";
+		// Extract integration name from path
+		if (preg_match('|/(?:src/)?integrations/([^/]+)/|', $normalized_path, $matches)) {
+			if (!empty($matches[1])) {
+				$integration = $matches[1];
+				// Remove dashes and capitalize each word
+				$integration = ucwords(str_replace('-', ' ', $integration));
+				return "'" . $integration . "'";
+			}
 		}
-
+		
+		// Look at the file path for special directories like email, api, etc.
+		if (preg_match('|/src/core/services/([^/]+)/|', $normalized_path, $matches)) {
+			if (!empty($matches[1])) {
+				$service = $matches[1];
+				// Format the service name (e.g., "email" -> "Email")
+				$service = ucwords(str_replace('-', ' ', $service));
+				return "'" . $service . "'";
+			}
+		}
+		
+		// If we can't find the integration folder, return General
 		return "'General'";
 	}
 
