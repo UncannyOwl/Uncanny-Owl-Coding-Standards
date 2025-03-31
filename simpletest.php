@@ -22,3 +22,31 @@ $some_array = array(
 echo 'Some text';
 
 $value = 'test';
+
+$is_true = true;
+$string = 'test';
+$array = array(
+	'key' => 'value',
+	'key2' => 'value2',
+	'key3' => 'value3',
+);
+
+if ( $is_true == true && $string == 'test' ) {
+	echo 'This is true';
+} 
+
+if ( $is_true == true || $string == 'test' ) {
+	echo 'This is true';
+} 
+
+if ( $is_true == true || ( $string == 'test' && $string == 'dfsdfsd' ) ) {
+	echo 'This is true';
+} 
+
+if ( $is_true == true && ( $string == 'test' && $string == 'dfsdfsd' ) ) {
+	echo 'This is true';
+} 
+
+if ( $array['key'] == 'value' ) {
+	echo 'This is true';
+} 
