@@ -40,6 +40,13 @@ class TranslatorCommentSniff implements Sniff {
 	);
 
 	/**
+	 * Whether we're inside a sprintf call.
+	 *
+	 * @var bool
+	 */
+	private $found_sprintf = false;
+
+	/**
 	 * Placeholder patterns that require translator comments.
 	 *
 	 * @var array
@@ -86,37 +93,109 @@ class TranslatorCommentSniff implements Sniff {
 			return;
 		}
 
+		// Make sure it's actually a function call
+		$prev_token = $phpcs_file->findPrevious( T_WHITESPACE, $stack_ptr - 1, null, true );
+		if ( false !== $prev_token ) {
+			// Skip if it's a method call or part of another construct
+			if ( in_array( $tokens[ $prev_token ]['code'], array( T_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NS_SEPARATOR ), true ) ) {
+				return;
+			}
+		}
+
+		// Find opening parenthesis
+		$open_paren = $phpcs_file->findNext( T_WHITESPACE, $stack_ptr + 1, null, true );
+		if ( false === $open_paren || T_OPEN_PARENTHESIS !== $tokens[ $open_paren ]['code'] ) {
+			return;
+		}
+
 		// Find the string argument
-		$string_ptr = $phpcs_file->findNext( T_CONSTANT_ENCAPSED_STRING, $stack_ptr + 1 );
+		$string_ptr = $phpcs_file->findNext( T_CONSTANT_ENCAPSED_STRING, $open_paren + 1 );
 		if ( false === $string_ptr ) {
 			return;
 		}
 
 		$string = $tokens[ $string_ptr ]['content'];
 
-		// Check if string has placeholders
+		// Check if this is inside a sprintf
+		$parent_ptr = $stack_ptr;
+		$this->found_sprintf = false;
+		while ( $parent_ptr > 0 ) {
+			$parent_ptr--;
+			if ( ! isset( $tokens[ $parent_ptr ] ) ) {
+				continue;
+			}
+
+			$token = $tokens[ $parent_ptr ];
+
+			// Skip whitespace
+			if ( $token['code'] === T_WHITESPACE ) {
+				continue;
+			}
+
+			// If we hit a newline or semicolon, we've gone too far
+			if ( in_array( $token['code'], array( T_SEMICOLON, T_CLOSE_CURLY_BRACKET ), true ) ) {
+				break;
+			}
+
+			// Check for sprintf
+			if ( $token['code'] === T_STRING && $token['content'] === 'sprintf' ) {
+				$this->found_sprintf = true;
+				break;
+			}
+		}
+
+		// If no placeholders, we don't care about translator comments at all
 		if ( ! $this->has_placeholders( $string ) ) {
 			return;
 		}
 
-		// Look for translator comment
-		$comment_ptr = $phpcs_file->findPrevious( array( T_COMMENT, T_DOC_COMMENT_OPEN_TAG ), $stack_ptr - 1 );
-		if ( false === $comment_ptr ) {
+		// Look for a translator comment
+		$found_translator_comment = false;
+		$prev_ptr = $stack_ptr;
+		
+		while ( $prev_ptr > 0 ) {
+			$prev_ptr--;
+			if ( ! isset( $tokens[ $prev_ptr ] ) ) {
+				continue;
+			}
+
+			$token = $tokens[ $prev_ptr ];
+
+			// Skip whitespace
+			if ( $token['code'] === T_WHITESPACE ) {
+				continue;
+			}
+
+			// If we hit a newline or semicolon, we've gone too far
+			if ( in_array( $token['code'], array( T_SEMICOLON, T_CLOSE_CURLY_BRACKET ), true ) ) {
+				break;
+			}
+
+			// Check for translator comments
+			if ( in_array( $token['code'], array( T_COMMENT, T_DOC_COMMENT_STRING, T_DOC_COMMENT_TAG ), true ) ) {
+				$comment = trim( $token['content'], '/* ' );
+				if ( $this->is_valid_translator_comment( $comment ) ) {
+					$found_translator_comment = true;
+					
+					$comment_text = trim( substr( $comment, strpos( $comment, ':' ) + 1 ) );
+					if ( strlen( $comment_text ) < 20 || strpos( $comment_text, 'is ' ) === false ) {
+						$phpcs_file->addWarning(
+							'Translator comment should be more descriptive. Example: "// translators: %1$s is the query string"',
+							$prev_ptr,
+							'InsufficientTranslatorComment'
+						);
+					}
+					
+					break;
+				}
+			}
+		}
+
+		if ( ! $found_translator_comment ) {
 			$phpcs_file->addError(
 				'String with placeholders must have a translator comment. Add a "// translators:" or "/* translators: */" comment.',
 				$stack_ptr,
 				'MissingTranslatorComment'
-			);
-			return;
-		}
-
-		// Check if it's a valid translator comment
-		$comment = $tokens[ $comment_ptr ]['content'];
-		if ( ! $this->is_valid_translator_comment( $comment ) ) {
-			$phpcs_file->addError(
-				'Invalid translator comment format. Use "// translators:" or "/* translators: */" followed by placeholder descriptions.',
-				$comment_ptr,
-				'InvalidTranslatorComment'
 			);
 		}
 	}
@@ -128,9 +207,38 @@ class TranslatorCommentSniff implements Sniff {
 	 * @return bool
 	 */
 	private function has_placeholders( $string ) {
-		return preg_match( '/%(?:[0-9]+\$)?[ds]/', $string ) ||
-			   strpos( $string, '%s' ) !== false ||
-			   strpos( $string, '%d' ) !== false;
+		// Remove quotes from the string
+		$string = trim( $string, "'\"" );
+		
+		// Check for any of our placeholder patterns
+		foreach ( $this->placeholder_patterns as $pattern ) {
+			if ( false !== strpos( $string, $pattern ) ) {
+				// Make sure it's not part of a word (e.g. "%string%" shouldn't match)
+				if ( preg_match( '/[a-zA-Z0-9]' . preg_quote( $pattern, '/' ) . '|' . preg_quote( $pattern, '/' ) . '[a-zA-Z0-9]/', $string ) ) {
+					continue;
+				}
+				return true;
+			}
+		}
+		
+		// Only check for dynamic content if we're inside a sprintf
+		if ( $this->found_sprintf ) {
+			// Check for dynamic content patterns
+			$dynamic_patterns = array(
+				'{{.*?}}',  // Matches {{anything}}
+				'%s',       // Generic string placeholder
+				'%d',       // Generic number placeholder
+				'%f',       // Generic float placeholder
+			);
+			
+			foreach ( $dynamic_patterns as $pattern ) {
+				if ( preg_match( '/' . $pattern . '/', $string ) ) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 
 	/**
@@ -141,9 +249,12 @@ class TranslatorCommentSniff implements Sniff {
 	 */
 	private function is_valid_translator_comment( $comment ) {
 		$comment = trim( $comment, '/* ' );
-		return ( strpos( $comment, 'translators:' ) === 0 ||
-			   strpos( $comment, 'translator:' ) === 0 ) &&
-			   strlen( $comment ) > 12;
+		if ( strpos( $comment, 'translators:' ) !== 0 && strpos( $comment, 'translator:' ) !== 0 ) {
+			return false;
+		}
+
+		$comment_text = trim( substr( $comment, strpos( $comment, ':' ) + 1 ) );
+		return strlen( $comment_text ) >= 20 && strpos( $comment_text, 'is ' ) !== false;
 	}
 
 	/**
