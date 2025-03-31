@@ -42,6 +42,7 @@
     <rule ref="./Sniffs/PHP/ForbiddenPHP8FeaturesSniff.php"/>
     <rule ref="./Sniffs/PHP/PHP74FeaturesSniff.php"/>
     <rule ref="./Sniffs/PHP/PHP80FeaturesSniff.php"/>
+    <rule ref="./Sniffs/PHP/YodaConditionsSniff.php"/>
 
     <!-- Custom DocBlock Sniff -->
     <rule ref="./Sniffs/Commenting/FunctionDocBlockSniff.php"/>
