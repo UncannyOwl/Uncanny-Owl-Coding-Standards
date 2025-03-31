@@ -31,202 +31,139 @@ class YodaConditionsSniff implements Sniff {
 	 */
 	public function process( File $phpcs_file, $stack_ptr ) {
 		$tokens = $phpcs_file->getTokens();
-
-		// Don't process if the comparison is inside parentheses and is part of a larger condition
-		if ( false === $this->should_process_comparison( $phpcs_file, $stack_ptr ) ) {
+		
+		// Only proceed if we're in an if statement
+		if ( ! $this->is_in_condition( $phpcs_file, $stack_ptr ) ) {
 			return;
 		}
-
-		// Get tokens on the left and right of the comparison operator
-		$left_ptr = $this->find_start_of_comparison_side( $phpcs_file, $stack_ptr - 1 );
-		if ( false === $left_ptr ) {
-			return;
-		}
-
-		$right_ptr = $this->find_end_of_comparison_side( $phpcs_file, $stack_ptr + 1 );
-		if ( false === $right_ptr ) {
-			return;
-		}
-
-		// If left side is already a literal/constant, this is already a Yoda condition
-		if ( $this->is_literal_or_constant( $tokens[$left_ptr] ) ) {
-			return;
-		}
-
-		// If right side is not a literal/constant, not a case we want to fix
-		$right_offset = 0;
+		
+		// Get left and right sides of the comparison
+		$left_token = $phpcs_file->findPrevious( Tokens::$emptyTokens, $stack_ptr - 1, null, true );
 		$right_token = $phpcs_file->findNext( Tokens::$emptyTokens, $stack_ptr + 1, null, true );
+		
+		if ( false === $left_token || false === $right_token ) {
+			return;
+		}
+
+		// Find the entire left side expression
+		$left_side_info = $this->get_expression_info( $phpcs_file, $left_token, $stack_ptr - 1 );
+		if ( $left_side_info['is_complex'] ) {
+			return; // Skip complex expressions on the left
+		}
+        
+		// If the left side is already a literal or constant, this is already a Yoda condition
+		if ( $this->is_literal_or_constant( $tokens[$left_token] ) ) {
+			return;
+		}
+		
+		// If the right side is not a literal or constant, we don't need to swap it
 		if ( ! $this->is_literal_or_constant( $tokens[$right_token] ) ) {
 			return;
 		}
-
-		// Find all the tokens that make up the left and right sides
-		$left_side_tokens = $this->get_side_tokens( $phpcs_file, $left_ptr, $stack_ptr - 1 );
-		$right_side_tokens = $this->get_side_tokens( $phpcs_file, $stack_ptr + 1, $right_ptr );
-
-		// Add the error
+		
+		// Add an error message
 		$fix = $phpcs_file->addFixableError(
 			'Use Yoda conditions when checking a variable against a literal or constant',
 			$stack_ptr,
 			'NotYoda'
 		);
-
+		
 		if ( $fix === true ) {
 			// Get the content of both sides
-			$left_content = '';
-			foreach ( $left_side_tokens as $token ) {
-				$left_content .= $tokens[$token]['content'];
-			}
+			$left_content = $phpcs_file->getTokensAsString( $left_side_info['start'], $left_side_info['end'] - $left_side_info['start'] + 1 );
+			$right_content = $tokens[$right_token]['content'];
 			
-			$right_content = '';
-			foreach ( $right_side_tokens as $token ) {
-				$right_content .= $tokens[$token]['content'];
-			}
-			
-			// Perform the swap
+			// Start the changeset
 			$phpcs_file->fixer->beginChangeset();
 			
-			// Replace left side with right content
-			foreach ( $left_side_tokens as $token ) {
-				$phpcs_file->fixer->replaceToken( $token, '' );
+			// Replace the left side with the right content
+			for ( $i = $left_side_info['start']; $i <= $left_side_info['end']; $i++ ) {
+				$phpcs_file->fixer->replaceToken( $i, '' );
 			}
 			$phpcs_file->fixer->addContentBefore( $stack_ptr, $right_content );
 			
-			// Replace right side with left content
-			foreach ( $right_side_tokens as $token ) {
-				$phpcs_file->fixer->replaceToken( $token, '' );
-			}
-			$phpcs_file->fixer->addContent( $stack_ptr, ' ' . $left_content );
+			// Replace the right side with the left content
+			$phpcs_file->fixer->replaceToken( $right_token, $left_content );
 			
+			// End the changeset
 			$phpcs_file->fixer->endChangeset();
 		}
 	}
-
+	
 	/**
-	 * Checks if we should process this comparison.
+	 * Check if we're inside a conditional statement.
 	 * 
 	 * @param File $phpcs_file The file being scanned.
-	 * @param int  $stack_ptr  The position of the current token in the stack.
+	 * @param int  $stack_ptr  The position of the token.
 	 * 
-	 * @return bool Whether to process this comparison.
+	 * @return bool Whether we're in a condition.
 	 */
-	private function should_process_comparison( File $phpcs_file, $stack_ptr ) {
+	private function is_in_condition( File $phpcs_file, $stack_ptr ) {
 		$tokens = $phpcs_file->getTokens();
 		
-		// Only process comparisons that aren't already part of a more complex expression
-		if ( isset( $tokens[$stack_ptr]['nested_parenthesis'] ) ) {
-			foreach ( $tokens[$stack_ptr]['nested_parenthesis'] as $open => $close ) {
-				// Check if the opening parenthesis is part of a conditional
-				$prev = $phpcs_file->findPrevious( Tokens::$emptyTokens, $open - 1, null, true );
-				if ( $prev !== false && in_array( $tokens[$prev]['code'], array( T_IF, T_ELSEIF, T_FOR, T_FOREACH, T_WHILE ), true ) ) {
-					// This is part of a conditional statement, proceed
-					return true;
-				}
-			}
-		}
-		
-		return true;
-	}
-
-	/**
-	 * Finds the start of the comparison side.
-	 * 
-	 * @param File $phpcs_file The file being scanned.
-	 * @param int  $start_ptr  The position to start looking from.
-	 * 
-	 * @return int|false The start of the comparison side, or false on failure.
-	 */
-	private function find_start_of_comparison_side( File $phpcs_file, $start_ptr ) {
-		$tokens = $phpcs_file->getTokens();
-		
-		$ptr = $phpcs_file->findPrevious( Tokens::$emptyTokens, $start_ptr, null, true );
-		if ( false === $ptr ) {
-			return false;
-		}
-		
-		// Handle array access and object properties
-		if ( $tokens[$ptr]['code'] === T_CLOSE_SQUARE_BRACKET ) {
-			if ( isset( $tokens[$ptr]['bracket_opener'] ) ) {
-				// Find the variable before the bracket
-				$bracket_open = $tokens[$ptr]['bracket_opener'];
-				$var_ptr = $phpcs_file->findPrevious( Tokens::$emptyTokens, $bracket_open - 1, null, true );
-				if ( $var_ptr !== false && $tokens[$var_ptr]['code'] === T_VARIABLE ) {
-					return $var_ptr;
-				}
-			}
-		} elseif ( $tokens[$ptr]['code'] === T_STRING ) {
-			// Check if this is an object property
-			$prev = $phpcs_file->findPrevious( Tokens::$emptyTokens, $ptr - 1, null, true );
-			if ( $prev !== false && $tokens[$prev]['code'] === T_OBJECT_OPERATOR ) {
-				$var_ptr = $phpcs_file->findPrevious( Tokens::$emptyTokens, $prev - 1, null, true );
-				if ( $var_ptr !== false && $tokens[$var_ptr]['code'] === T_VARIABLE ) {
-					return $var_ptr;
-				}
-			}
-		}
-		
-		return $ptr;
-	}
-
-	/**
-	 * Finds the end of the comparison side.
-	 * 
-	 * @param File $phpcs_file The file being scanned.
-	 * @param int  $start_ptr  The position to start looking from.
-	 * 
-	 * @return int|false The end of the comparison side, or false on failure.
-	 */
-	private function find_end_of_comparison_side( File $phpcs_file, $start_ptr ) {
-		$tokens = $phpcs_file->getTokens();
-		
-		$ptr = $phpcs_file->findNext( Tokens::$emptyTokens, $start_ptr, null, true );
-		if ( false === $ptr ) {
-			return false;
-		}
-		
-		// For literals, just return them directly
-		if ( $this->is_literal_or_constant( $tokens[$ptr] ) ) {
-			return $ptr;
-		}
-		
-		// For variables, handle array access and object properties
-		if ( $tokens[$ptr]['code'] === T_VARIABLE ) {
-			$next = $phpcs_file->findNext( Tokens::$emptyTokens, $ptr + 1, null, true );
-			if ( $next !== false ) {
-				if ( $tokens[$next]['code'] === T_OPEN_SQUARE_BRACKET && isset( $tokens[$next]['bracket_closer'] ) ) {
-					return $tokens[$next]['bracket_closer'];
-				} elseif ( $tokens[$next]['code'] === T_OBJECT_OPERATOR ) {
-					$next_next = $phpcs_file->findNext( Tokens::$emptyTokens, $next + 1, null, true );
-					if ( $next_next !== false && $tokens[$next_next]['code'] === T_STRING ) {
-						return $next_next;
+		if ( ! empty( $tokens[$stack_ptr]['nested_parenthesis'] ) ) {
+			foreach ( $tokens[$stack_ptr]['nested_parenthesis'] as $start => $end ) {
+				if ( isset( $tokens[$start]['parenthesis_owner'] ) ) {
+					$owner = $tokens[$start]['parenthesis_owner'];
+					if ( in_array( $tokens[$owner]['code'], array( T_IF, T_ELSEIF, T_WHILE, T_FOR, T_FOREACH ), true ) ) {
+						return true;
 					}
 				}
 			}
 		}
 		
-		return $ptr;
+		return false;
 	}
 
 	/**
-	 * Gets all tokens that make up a side of a comparison.
+	 * Gets information about an expression.
 	 * 
 	 * @param File $phpcs_file The file being scanned.
-	 * @param int  $start_ptr  The position to start from.
-	 * @param int  $end_ptr    The position to end at.
+	 * @param int  $start_ptr  The start token.
+	 * @param int  $end_ptr    The end token.
 	 * 
-	 * @return array Array of token pointers.
+	 * @return array Information about the expression.
 	 */
-	private function get_side_tokens( File $phpcs_file, $start_ptr, $end_ptr ) {
+	private function get_expression_info( File $phpcs_file, $start_ptr, $end_ptr ) {
 		$tokens = $phpcs_file->getTokens();
-		$side_tokens = array();
+		$info = array(
+			'start' => $start_ptr,
+			'end' => $start_ptr,
+			'is_complex' => false,
+		);
 		
-		for ( $i = $start_ptr; $i <= $end_ptr; $i++ ) {
-			if ( $tokens[$i]['code'] !== T_WHITESPACE ) {
-				$side_tokens[] = $i;
+		// Simple variable
+		if ( $tokens[$start_ptr]['code'] === T_VARIABLE ) {
+			$info['end'] = $start_ptr;
+			
+			// Check if it's an array access
+			$next_ptr = $phpcs_file->findNext( Tokens::$emptyTokens, $start_ptr + 1, $end_ptr + 1, true );
+			if ( $next_ptr !== false && $tokens[$next_ptr]['code'] === T_OPEN_SQUARE_BRACKET ) {
+				// Find the closing bracket
+				if ( isset( $tokens[$next_ptr]['bracket_closer'] ) ) {
+					$info['end'] = $tokens[$next_ptr]['bracket_closer'];
+				} else {
+					$info['is_complex'] = true;
+					return $info;
+				}
+			} 
+			// Check if it's an object property
+			elseif ( $next_ptr !== false && $tokens[$next_ptr]['code'] === T_OBJECT_OPERATOR ) {
+				$property_ptr = $phpcs_file->findNext( Tokens::$emptyTokens, $next_ptr + 1, $end_ptr + 1, true );
+				if ( $property_ptr !== false && $tokens[$property_ptr]['code'] === T_STRING ) {
+					$info['end'] = $property_ptr;
+				} else {
+					$info['is_complex'] = true;
+					return $info;
+				}
 			}
+			
+			return $info;
 		}
-		
-		return $side_tokens;
+
+		// It's not a variable or we don't understand the expression
+		$info['is_complex'] = true;
+		return $info;
 	}
 	
 	/**
