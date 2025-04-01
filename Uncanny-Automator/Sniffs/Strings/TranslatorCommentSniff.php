@@ -22,6 +22,13 @@ class TranslatorCommentSniff implements Sniff {
 	public $priority = 100;
 
 	/**
+	 * Minimum comment length.
+	 *
+	 * @var int
+	 */
+	const MIN_COMMENT_LENGTH = 10;
+
+	/**
 	 * Translation functions to check.
 	 *
 	 * @var array
@@ -178,7 +185,7 @@ class TranslatorCommentSniff implements Sniff {
 					$found_translator_comment = true;
 					
 					$comment_text = trim( substr( $comment, strpos( $comment, ':' ) + 1 ) );
-					if ( strlen( $comment_text ) < 20 || strpos( $comment_text, 'is ' ) === false ) {
+					if ( strlen( $comment_text ) < self::MIN_COMMENT_LENGTH ) {
 						$phpcs_file->addWarning(
 							'Translator comment should be more descriptive. Example: "// translators: %1$s is the query string"',
 							$prev_ptr,
@@ -255,7 +262,7 @@ class TranslatorCommentSniff implements Sniff {
 
 		// Remove the requirement for "is" and adjust the length requirement if needed
 		$comment_text = trim( substr( $comment, strpos( $comment, ':' ) + 1 ) );
-		return strlen( $comment_text ) >= 5; // Adjust the length as needed
+		return strlen( $comment_text ) >= self::MIN_COMMENT_LENGTH;
 	}
 
 	/**
