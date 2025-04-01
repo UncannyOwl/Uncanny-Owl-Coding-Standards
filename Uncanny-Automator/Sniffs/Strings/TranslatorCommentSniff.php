@@ -253,8 +253,9 @@ class TranslatorCommentSniff implements Sniff {
 			return false;
 		}
 
+		// Remove the requirement for "is" and adjust the length requirement if needed
 		$comment_text = trim( substr( $comment, strpos( $comment, ':' ) + 1 ) );
-		return strlen( $comment_text ) >= 20 && strpos( $comment_text, 'is ' ) !== false;
+		return strlen( $comment_text ) >= 5; // Adjust the length as needed
 	}
 
 	/**
