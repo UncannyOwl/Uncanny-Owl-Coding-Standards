@@ -135,6 +135,11 @@
             <property name="text_domain" type="array">
                 <element value="uncanny-automator"/>
                 <element value="uncanny-automator-pro"/>
+                <element value="uaul"/>
+                <element value="uacuf"/>
+                <element value="uarc"/>
+                <element value="uncanny-automator-elite"/>
+                <element value="/^uncanny-automator-.*$/"/>
             </property>
         </properties>
     </rule>
