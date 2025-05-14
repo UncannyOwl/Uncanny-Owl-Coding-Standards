@@ -21,6 +21,7 @@ class TextDomainSniff implements Sniff {
 	private $core_textdomains = array(
 		'uncanny-automator',
 		'uncanny-automator-pro',
+		'uncanny-automator-elite'
 	);
 
 	/**
