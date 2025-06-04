@@ -231,9 +231,9 @@ class AutoContextTranslationSniff implements Sniff {
 			'_e' => '_ex',
 			'_x' => 'esc_html_x',
 			'esc_html__' => 'esc_html_x',
-			'esc_html_e' => 'esc_html_ex',
+			'esc_html_e' => 'esc_html_x',
 			'esc_attr__' => 'esc_attr_x',
-			'esc_attr_e' => 'esc_attr_ex',
+			'esc_attr_e' => 'esc_attr_x',
 		);
 
 		return isset( $context_functions[ $function ] ) ? $context_functions[ $function ] : $function;
