@@ -290,13 +290,12 @@ class AutoContextTranslationSniff implements Sniff {
 		// Apply the fix
 		$phpcs_file->fixer->beginChangeset();
 		
-		// Add echo if needed
+		// Replace the function name, adding echo if needed
 		if ( $needs_echo ) {
-			$phpcs_file->fixer->addContentBefore( $stack_ptr, 'echo ' );
+			$phpcs_file->fixer->replaceToken( $stack_ptr, 'echo ' . $new_function );
+		} else {
+			$phpcs_file->fixer->replaceToken( $stack_ptr, $new_function );
 		}
-		
-		// Replace the function name
-		$phpcs_file->fixer->replaceToken( $stack_ptr, $new_function );
 		
 		// Replace everything between parentheses
 		$current = $open_paren + 1;
