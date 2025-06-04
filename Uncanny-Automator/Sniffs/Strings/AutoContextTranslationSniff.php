@@ -284,8 +284,16 @@ class AutoContextTranslationSniff implements Sniff {
 			return;
 		}
 
+		// Check if we need to add echo (when converting from echoing function to non-echoing context function)
+		$needs_echo = in_array( $function_name, array( 'esc_html_e', 'esc_attr_e' ), true );
+
 		// Apply the fix
 		$phpcs_file->fixer->beginChangeset();
+		
+		// Add echo if needed
+		if ( $needs_echo ) {
+			$phpcs_file->fixer->addContentBefore( $stack_ptr, 'echo ' );
+		}
 		
 		// Replace the function name
 		$phpcs_file->fixer->replaceToken( $stack_ptr, $new_function );
