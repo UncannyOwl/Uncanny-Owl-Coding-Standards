@@ -151,6 +151,14 @@ class SentenceCaseSniff implements Sniff {
 	private $project_reserved = array();
 
 	/**
+	 * Whether to show warnings for cautious cases.
+	 * Set to false to avoid exit code 1 in CI/CD pipelines.
+	 *
+	 * @var bool
+	 */
+	public $show_warnings = false;
+
+	/**
 	 * Initialize the sniff by loading project-specific reserved words.
 	 */
 	public function __construct() {
@@ -257,8 +265,8 @@ class SentenceCaseSniff implements Sniff {
 			}
 		}
 
-		// Process warnings (no auto-fix)
-		if ( ! empty( $warnings ) ) {
+		// Process warnings (conditional) - only if show_warnings is enabled
+		if ( $this->show_warnings && ! empty( $warnings ) ) {
 			$warning_msg = sprintf(
 				'These words might need case correction (review manually): %s | Full string: "%s"',
 				implode(
