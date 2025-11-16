@@ -47,7 +47,7 @@ class ForbiddenPHP8FeaturesSniff implements Sniff {
 
 		if ( in_array( $content, $this->forbidden_features, true ) ) {
 			$error = sprintf(
-				'PHP 8.0+ feature "%s" is not allowed as we need to maintain PHP 7.3 compatibility',
+				'PHP 8.0+ feature "%s" is not allowed as we need to maintain PHP 7.4 compatibility',
 				$content
 			);
 			$phpcs_file->addError( $error, $stack_ptr, 'ForbiddenPHP8Feature' );
