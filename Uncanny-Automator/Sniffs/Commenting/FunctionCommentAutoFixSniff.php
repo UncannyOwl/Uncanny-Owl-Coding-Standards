@@ -109,10 +109,10 @@ class FunctionCommentAutoFixSniff implements Sniff {
 		// Check if there's already a docblock for this function
 		$commentEnd = false;
 		$firstModifier = !empty($modifiers) ? min(array_values($modifiers)) : $stackPtr;
-		$docBlockEnd = $phpcsFile->findPrevious(T_DOC_COMMENT_CLOSE_TAG, $firstModifier - 1, max(0, $firstModifier - 20));
+		$docBlockEnd = $phpcsFile->findPrevious(T_DOC_COMMENT_CLOSE_TAG, $firstModifier - 1, max(0, $firstModifier - 200));
 		
 		if ($docBlockEnd !== false) {
-			$docBlockStart = $phpcsFile->findPrevious(T_DOC_COMMENT_OPEN_TAG, $docBlockEnd - 1, max(0, $docBlockEnd - 100));
+			$docBlockStart = $phpcsFile->findPrevious(T_DOC_COMMENT_OPEN_TAG, $docBlockEnd - 1, max(0, $docBlockEnd - 500));
 			
 			if ($docBlockStart !== false) {
 				// Check if the docblock is close enough to be considered for this function
